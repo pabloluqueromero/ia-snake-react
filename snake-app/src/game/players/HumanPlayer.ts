@@ -4,36 +4,34 @@ import SnakeGame from "../controls/SnakeGame";
 import { Player } from "./Player";
 
 class HumanPlayer implements Player {
-    private lastKey = new Date();
+    private move = Direction.DOWN;
     private game: SnakeGame;
     init(): void {
         document.addEventListener("keydown", (event) => {
-            let currentTime = new Date()
-            console.log(currentTime);
             /* if(Math. abs(currentTime-this.lastKey)<5000){
                  return
              } */
             switch (event.key) {
                 case 'ArrowDown':
-                    if ((this.game.getLastMovement() !== Direction.UP && this.game.isSnakeMoving()) || this.game.getSnakeLength() === 1) {
-                        this.game.setLastMovement(Direction.DOWN);
+                    if ((this.game.isSnakeMoving() && this.game.getLastMovement() !== Direction.UP) || this.game.getSnakeLength() === 1) {
+                        this.move = Direction.DOWN;
                     }
                     return;
                 case 'ArrowUp':
-                    if ((this.game.getLastMovement() !== Direction.DOWN && this.game.isSnakeMoving()) || this.game.getSnakeLength() === 1) {
-                        this.game.setLastMovement(Direction.UP);
+                    if ((this.game.isSnakeMoving() && this.game.getLastMovement() !== Direction.DOWN) || this.game.getSnakeLength() === 1) {
+                        this.move = Direction.UP;
                     }
                     return;
                 case 'ArrowRight':
 
-                    if ((this.game.getLastMovement() !== Direction.LEFT && this.game.isSnakeMoving()) || this.game.getSnakeLength() === 1) {
-                        this.game.setLastMovement(Direction.RIGHT);
+                    if ((this.game.isSnakeMoving() && this.game.getLastMovement() !== Direction.LEFT) || this.game.getSnakeLength() === 1) {
+                        this.move = Direction.RIGHT;
                     }
                     return;
                 case 'ArrowLeft':
 
-                    if ((this.game.getLastMovement() !== Direction.RIGHT && this.game.isSnakeMoving()) || this.game.getSnakeLength() === 1) {
-                        this.game.setLastMovement(Direction.LEFT);
+                    if ((this.game.isSnakeMoving() && this.game.getLastMovement() !== Direction.RIGHT) || this.game.getSnakeLength() === 1) {
+                        this.move = Direction.LEFT;
                     }
                     return;
                 case 'p':
@@ -48,6 +46,10 @@ class HumanPlayer implements Player {
     }
     setGame(game: SnakeGame): void {
         this.game = game;
+    }
+
+    getNextMove(): Direction {
+        return this.move;
     }
 }
 

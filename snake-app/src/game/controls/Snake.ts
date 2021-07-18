@@ -1,3 +1,4 @@
+import { Position } from "../game-utils/Position";
 import Direction from "./Direction";
 import SnakeLinkedList from "./SnakeLinkedList";
 
@@ -7,71 +8,65 @@ class Snake {
     private rows: number;
     private columns: number;
 
-    constructor(rows: number,
-        columns: number,
-        positions: Array<{ row: number, column: number }>) {
+    constructor(rows: number, columns: number, positions: Array<Position>) {
         this.rows = rows
         this.columns = columns
-        positions.forEach(position => this.bodySet.add(position.row * this.columns + position.column))
+        positions.forEach(position => this.bodySet.add(position.getRow() * this.columns + position.getColumn()))
         this.snake = new SnakeLinkedList(positions);
     }
 
-    isBody(row: number, column: number) {
-        return this.bodySet.has(row * this.columns + column)
+    isBody(position: Position) {
+        return this.bodySet.has(position.getRow() * this.columns + position.getColumn())
     }
 
     //returns if apple was eaten
-    move(movement: Direction, applePosition: { row: number, column: number }): { appleEaten: boolean, affectedPositions: { row: number, column: number }[] } {
+    move(movement: Direction, applePosition: Position): { appleEaten: boolean, affectedPositions: Position[] } {
         let nextHeadPosition = this.getNextPosition(movement)
-        let nextHeadPositionObject = { row: nextHeadPosition[0], column: nextHeadPosition[1] }
-        let positionObject = { row: nextHeadPosition[0], column: nextHeadPosition[1] };
-        let isApple = applePosition.row === nextHeadPosition[0] && applePosition.column === nextHeadPosition[1]
+        let isApple = nextHeadPosition.equals(applePosition);
         let previousTail = this.snake.getTail().getPosition()
         if (!isApple) {
-            let tailPositionID = this.snake.getTail().getPosition().row * this.columns + this.snake.getTail().getPosition().column
+            let tailPositionID = this.snake.getTail().getPosition().getRow() * this.columns + this.snake.getTail().getPosition().getColumn();
             this.bodySet.delete(tailPositionID); //delete to avoid unexistant colision
             this.detectCollision(nextHeadPosition);
         }
-        this.bodySet.add(positionObject.row * this.columns + positionObject.column);
-        this.snake.move(positionObject, isApple);
+        this.bodySet.add(nextHeadPosition.getRow() * this.columns + nextHeadPosition.getColumn());
+        this.snake.move(nextHeadPosition, isApple);
         return {
             appleEaten: isApple,
-            affectedPositions: [nextHeadPositionObject, isApple ? applePosition : previousTail]};
-        
+            affectedPositions: [nextHeadPosition, isApple ? applePosition : previousTail]
+        };
+
     }
 
 
     //Auxiliary methods
-    detectCollision(position: [number, number]) {
-        let row = position[0];
-        let column = position[1];
-
-        if (row < 0) {
+    detectCollision(position: Position) {
+        if (position.getRow() < 0) {
             throw new Error(`Snake collision up`);
         }
-        if (row >= this.rows) {
+        if (position.getRow() >= this.rows) {
             throw new Error(`Snake collision down`);
         }
-        if (column < 0) {
+        if (position.getColumn() < 0) {
             throw new Error(`Snake collision left`);
         }
-        if (column >= this.columns) {
+        if (position.getColumn() >= this.columns) {
             throw new Error(`Snake collision right`);
         }
-        if (this.isBody(row, column)) {
+        if (this.isBody(position)) {
             throw new Error(`Snake collision body`);
         }
     }
-    getNextPosition(movement: Direction): [number, number] {
+    getNextPosition(movement: Direction): Position {
         switch (movement) {
             case Direction.UP:
-                return [this.snake.getRow() - 1, this.snake.getColumn()];
+                return new Position(this.snake.getPosition().getRow() - 1, this.snake.getPosition().getColumn());
             case Direction.LEFT:
-                return [this.snake.getRow(), this.snake.getColumn() - 1];
+                return new Position(this.snake.getPosition().getRow(), this.snake.getPosition().getColumn() - 1);
             case Direction.RIGHT:
-                return [this.snake.getRow(), this.snake.getColumn() + 1];
+                return new Position(this.snake.getPosition().getRow(), this.snake.getPosition().getColumn() + 1);
             default:
-                return [this.snake.getRow() + 1, this.snake.getColumn()];
+                return new Position(this.snake.getPosition().getRow() + 1, this.snake.getPosition().getColumn());
         }
 
     }
@@ -81,9 +76,13 @@ class Snake {
     }
 
 
-    isHead(rowIndex: number, columnIndex: number) {
-        return this.snake.getPosition().row === rowIndex &&
-            this.snake.getPosition().column === columnIndex
+    isHead(position: Position) {
+        return this.snake.getPosition().equals(position)
+    }
+
+
+    getHeadPosition(): Position {
+        return this.snake.getPosition();
     }
 }
 

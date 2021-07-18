@@ -1,4 +1,5 @@
 import React from 'react';
+import { Position } from '../../game/game-utils/Position';
 import './SnakeBoard.css';
 import Square from './Square';
 
@@ -30,8 +31,8 @@ class SnakeBoard extends React.Component<{}, { score: number, length: number }> 
   }
 
 
-  setPosition(rowIndex: number, columnIndex: number, classNames: string[]) {
-    this.boardSquares[rowIndex][columnIndex].current.changeColor(classNames);
+  setPosition(position: Position, classNames: string[]) {
+    this.boardSquares[position.getRow()][position.getColumn()].current.changeColor(classNames);
   }
 
 
@@ -40,6 +41,14 @@ class SnakeBoard extends React.Component<{}, { score: number, length: number }> 
       row.map((props, j) =>
         <Square ref={this.boardSquares[i][j]} {...props} />
       ))
+  }
+
+  setScore(newScore: number) {
+    this.setState({ score: newScore });
+  }
+
+  setLength(newLength: number) {
+    this.setState({ length: newLength });
   }
   render() {
     return (

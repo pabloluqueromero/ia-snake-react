@@ -1,13 +1,13 @@
+import { Position } from "../game-utils/Position";
 
 class SnakeLinkedList {
 
-    private row: number;
-    private column: number;
+    private position: Position;
     private nextNode: SnakeLinkedList | null;
     private tail: SnakeLinkedList; //keep track of tail
 
 
-    constructor(positions: Array<{ row: number, column: number }>) {
+    constructor(positions: Array<Position>) {
         if (positions.length) {
             let position = positions.pop()
             this.setPosition(position);
@@ -17,30 +17,20 @@ class SnakeLinkedList {
         this.tail = this;
         this.nextNode = null;
     }
-
-    getRow() {
-        return this.row;
-    }
-
-    getColumn() {
-        return this.column;
-    }
-
-    getPosition(): { row: number, column: number } {
-        return { row: this.row, column: this.column };
+    getPosition(): Position {
+        return this.position;
     }
 
     getNextNode() {
-        return this.column;
+        return this.nextNode;
     }
 
     getTail() {
         return this.tail;
     }
 
-    setPosition(position: { row: number, column: number }) {
-        this.row = position.row;
-        this.column = position.column;
+    setPosition(position: Position) {
+        this.position = position;
     }
     setNextNode(nextNode: SnakeLinkedList) {
         this.nextNode = nextNode;
@@ -51,7 +41,7 @@ class SnakeLinkedList {
         }
     }
 
-    move(position: { row: number, column: number }, apple: boolean) {
+    move(position: Position, apple: boolean) {
         if (apple) {
             let newNextNode = new SnakeLinkedList([this.getPosition()]);
             newNextNode.setNextNode(this.nextNode);

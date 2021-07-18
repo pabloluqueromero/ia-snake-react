@@ -51,7 +51,12 @@
     display: block;
     width: 100%;
     height: 100%;
+    animation:appleAnimation 0.7s alternate infinite ease-in;
 }
+@keyframes appleAnimation {
+    0%   {transform: scale(.9);}
+    100% {transform: scale(1.2);}
+  }
 
 .grid {
     display: grid;
@@ -82,11 +87,17 @@
     
 } */
 
-.head{
-    background-color: var(--snake-light-head) !important;
-}
-.body{
+.head::after,.body::after{
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    content:'';
+    display: flex;
+    justify-content: center;
+    align-content: center;
     background-color: var(--snake-light) !important;
+    border-radius: 5px;
+    border: 1px solid rgb(24, 24, 24);
 }
 
 .score{
