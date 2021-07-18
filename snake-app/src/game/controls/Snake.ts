@@ -1,4 +1,4 @@
-import Direction from "./DIrection";
+import Direction from "./Direction";
 import SnakeLinkedList from "./SnakeLinkedList";
 
 class Snake {
@@ -21,19 +21,23 @@ class Snake {
     }
 
     //returns if apple was eaten
-    move(movement: Direction, applePosition: { row: number, column: number }) {
+    move(movement: Direction, applePosition: { row: number, column: number }): { appleEaten: boolean, affectedPositions: { row: number, column: number }[] } {
         let nextHeadPosition = this.getNextPosition(movement)
+        let nextHeadPositionObject = { row: nextHeadPosition[0], column: nextHeadPosition[1] }
         let positionObject = { row: nextHeadPosition[0], column: nextHeadPosition[1] };
         let isApple = applePosition.row === nextHeadPosition[0] && applePosition.column === nextHeadPosition[1]
-
+        let previousTail = this.snake.getTail().getPosition()
         if (!isApple) {
-            let tailPosition = this.snake.getTail().getPosition().row * this.columns + this.snake.getTail().getPosition().column
-            this.bodySet.delete(tailPosition); //delete to avoid unexistant colision
+            let tailPositionID = this.snake.getTail().getPosition().row * this.columns + this.snake.getTail().getPosition().column
+            this.bodySet.delete(tailPositionID); //delete to avoid unexistant colision
             this.detectCollision(nextHeadPosition);
         }
         this.bodySet.add(positionObject.row * this.columns + positionObject.column);
         this.snake.move(positionObject, isApple);
-        return isApple;
+        return {
+            appleEaten: isApple,
+            affectedPositions: [nextHeadPositionObject, isApple ? applePosition : previousTail]};
+        
     }
 
 
@@ -72,14 +76,14 @@ class Snake {
 
     }
 
-    getSize(){
+    getSize() {
         return this.bodySet.size;
     }
 
 
     isHead(rowIndex: number, columnIndex: number) {
-        return this.snake.getPosition().row == rowIndex &&
-        this.snake.getPosition().column == columnIndex 
+        return this.snake.getPosition().row === rowIndex &&
+            this.snake.getPosition().column === columnIndex
     }
 }
 
