@@ -1,0 +1,24 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+snake-app/node_modules
+snake-app/.pnp
+snake-app/.pnp.js
+snake-app/package-lock.json
+
+# testing
+snake-app/coverage
+
+# production
+snake-app/build
+
+# misc
+snake-app/.DS_Store
+snake-app/.env.local
+snake-app/.env.development.local
+snake-app/.env.test.local
+snake-app/.env.production.local
+
+snake-app/npm-debug.log*
+snake-app/yarn-debug.log*
+snake-app/yarn-error.log*
