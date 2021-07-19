@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import SnakeGame from '../../game/controls/SnakeGame';
+import AStarPlayer from '../../game/players/AStarPlayer';
 import HumanPlayer from '../../game/players/HumanPlayer';
 import NavBar from '../NavBar/NavBar';
 import SnakeBoard from '../SnakeBoard/SnakeBoard';
@@ -10,9 +11,11 @@ function Home() {
   let speed = 100;
   let props = { rows: size, columns: size, speed: speed };
   let board = React.createRef<SnakeBoard>();
-  let player = new HumanPlayer();
+  //let player = new HumanPlayer();
+  let player = new AStarPlayer();
 
   useEffect(() => {
+    //console.debug("[Home] Creating New game")
     new SnakeGame(size, size, speed, board, player);
   });
 
