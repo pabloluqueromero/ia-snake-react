@@ -39,7 +39,7 @@ class SnakeBoard extends React.Component<{}, { score: number, length: number }> 
   displayBoard() {
     return this.boardProps.flatMap((row, i) =>
       row.map((props, j) =>
-        <Square ref={this.boardSquares[i][j]} {...props} />
+        <Square key={[i,j].join('-')} ref={this.boardSquares[i][j]} {...props} />
       ))
   }
 

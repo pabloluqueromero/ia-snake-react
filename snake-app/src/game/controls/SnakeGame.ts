@@ -5,7 +5,6 @@ import Direction from './Direction';
 import Snake from './Snake';
 
 class SnakeGame {
-
     // Game state variables
     private board: React.RefObject<SnakeBoard>;
     private applePosition: Position;
@@ -29,7 +28,7 @@ class SnakeGame {
         this.rows = rows;
         this.columns = columns;
         this.board = board
-        this.speed = speed;
+        this.speed = speed/10;
         this.player = player;
         this.player.init()
         this.player.setGame(this);
@@ -46,19 +45,31 @@ class SnakeGame {
         this.isMoving = true;
         this.gameCount += 1
         if (this.gameCount > 1) {
-            clearInterval(this.keepMoving);
+            this.clearInterval()
         }
         this.setInitialColors();
-        this.keepMoving = setInterval(() => this.move(), this.speed);
+        this.resetInterval();
 
+    }
+    resetInterval() {
+        this.keepMoving = window.requestAnimationFrame(() => {
+            if(this.isMoving){
+                this.move();
+            }
+        });
+    }
+    private clearInterval() {
+        window.cancelAnimationFrame(this.keepMoving);
     }
     getRandomApplePosition(): Position {
         let row = Math.floor(Math.random() * (this.rows - 1));
         let column = Math.floor(Math.random() * (this.columns - 1));
         let position = new Position(row, column);
-        while (this.snake.isBody(position)) {
-            row = Math.floor(Math.random() * (this.rows - 1));
-            column = Math.floor(Math.random() * (this.columns - 1));
+        while (this.snake.isBody(position) || this.snake.isHead(position)) {
+            row = Math.floor(Math.random() * (this.rows));
+            column = Math.floor(Math.random() * (this.columns));
+            position.setRow(row);
+            position.setColumn(column);
         }
         return position;
     }
@@ -66,19 +77,24 @@ class SnakeGame {
     move(): void {
         try {
             let nextMovement = this.player.getNextMove();
+            //console.debug("[SnakeGame] move -> "+ nextMovement)
             let result = this.snake.move(nextMovement, this.applePosition);
             this.setLastMovement(nextMovement);
 
             if (result.appleEaten) {
+                //console.debug("[SnakeGame] Eating apple")
                 this.score += 1;
                 this.board.current.setScore(this.score);
                 this.applePosition = this.getRandomApplePosition();
                 result.affectedPositions.push(this.applePosition);
             }
             this.board.current.setLength(this.getSnakeLength());
+
+            //console.debug(`[SnakeGame] updating ${result.affectedPositions.length} positions`)
             result.affectedPositions.forEach(affectedPosition => this.setSinglePosition(affectedPosition));
+            this.resetInterval();
         } catch (e) {
-            clearInterval(this.keepMoving);
+            this.clearInterval();
             this.initializeGame();
         }
     }
@@ -112,13 +128,13 @@ class SnakeGame {
         return this.applePosition;
     }
     pause() {
-        clearInterval(this.keepMoving);
+        this.clearInterval()
         this.isMoving = false;
     }
 
     resume() {
         if (!this.isMoving) {
-            this.keepMoving = setInterval(() => this.move(), this.speed);
+            this.resetInterval();
             this.isMoving = true;
         }
     }
@@ -130,8 +146,15 @@ class SnakeGame {
     getSteps() {
         return this.steps;
     }
+    getDimensions() : [number,number] {
+        return [this.rows,this.columns];
+    }
 
 
+
+    getSnake(): Snake{
+        return this.snake
+    }
 
     setSinglePosition(position: Position) {
         let classNames = []
