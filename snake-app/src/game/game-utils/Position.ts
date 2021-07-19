@@ -1,4 +1,10 @@
 export class Position {
+    setColumn(column: number) {
+        this.column = column;
+    }
+    setRow(row: number) {
+        this.row = row;
+    }
     private row: number;
     private column: number;
 
