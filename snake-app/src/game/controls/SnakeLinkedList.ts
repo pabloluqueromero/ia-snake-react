@@ -1,4 +1,4 @@
-import { Position } from "../game-utils/Position";
+import Position from "../game-utils/Position";
 
 class SnakeLinkedList {
 

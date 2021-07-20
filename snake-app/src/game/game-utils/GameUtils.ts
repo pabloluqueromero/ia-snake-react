@@ -1,6 +1,6 @@
 import Direction from "../controls/Direction";
 import Snake from "../controls/Snake";
-import { Position } from "./Position";
+import Position from "./Position";
 
 export class GameUtils{
     static allDirections = [Direction.UP, Direction.DOWN, Direction.LEFT, Direction.RIGHT];

@@ -1,9 +1,9 @@
 
 import Direction from "../controls/Direction";
 import SnakeGame from "../controls/SnakeGame";
-import { Player } from "./Player";
+import Player from "./Player";
 import { HeapQueue } from "../game-utils/HeapQueue";
-import { Position } from "../game-utils/Position";
+import Position from "../game-utils/Position";
 import { GameUtils } from "../game-utils/GameUtils";
 
 
@@ -43,9 +43,10 @@ class AStarPlayer implements Player {
         let priorityQueue = new HeapQueue<AStarNode>();
         priorityQueue.setStrategy('max');
         priorityQueue.insert(currentNode, currentNode.getPriority());
-        let heuristicDistance : number;
-        let cost : number;
         let tempNode : AStarNode;
+        let neighbours: Position[];
+        let neighbour: Position;
+
         while (!priorityQueue.isEmpty()) {
             currentNode = priorityQueue.pop();
             //console.log(currentNode.getPosition().getRow()+ ' '+ currentNode.getPosition().getColumn())
@@ -56,12 +57,14 @@ class AStarPlayer implements Player {
             currentNodeID = this.getPositionID(currentNode.getPosition());
             if (!exploredNodes.has(currentNodeID)) {
                 exploredNodes.add(currentNodeID);
-                this.getNeighbours(currentNode.getPosition()).forEach(neighbour => {
-                    heuristicDistance = this.getDistance(neighbour,targetNode);
-                    cost = currentNode.getCost()+1;
-                    tempNode = AStarNode.createAStarNode(neighbour, heuristicDistance, cost,currentNode);
+                neighbours = this.getNeighbours(currentNode.getPosition());
+                for(let i=0; i< neighbours.length; i++){
+                    neighbour = neighbours[i];
+                    tempNode = AStarNode.createAStarNode(neighbour, 
+                                                        this.getDistance(neighbour,targetNode), 
+                                                        currentNode.getCost()+1,currentNode);
                     priorityQueue.insert(tempNode, tempNode.getPriority());
-                });
+                }
 
             }
         }

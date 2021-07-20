@@ -1,4 +1,4 @@
-export class Position {
+export default class Position {
     setColumn(column: number) {
         this.column = column;
     }

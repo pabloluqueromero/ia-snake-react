@@ -6,38 +6,71 @@
     width: 180px;
 }
 
+.game-over-info-container:nth-child(2) * {
+    padding: 1.5em;
+    font-size: 1.5em;
+    width: 250px;
+}
+
 .game-over-info-title {
+    font-family: 'Black Ops One', cursive;
     display: flex;
     justify-content: center;
     width: 100%;
     color: white;
-    font-size: 1.1em;
+    font-size: 1.3em;
     padding: 1.3em;
-    font-weight: bold;
     background: rgb(51, 51, 51);
     border-radius: 10px 10px 0px 0px;
+    text-transform: uppercase;
+    border: 2px solid rgb(51, 51, 51);
 }
 
 .game-over-info-content {
     display: flex;
-    padding: 2em;
+    padding: 1.3em;
     justify-content: center;
     width: 100%;
-    font-size: 1.2em;
+    font-size: 1.3em;
     color: black;
+    font-family: 'Black Ops One', cursive;
     background: rgb(226, 226, 226);
     border-radius: 0px 0px 10px 10px;
+    border: 5px solid rgb(51, 51, 51);
 }
 
 .game-over-button {
-    background-color: rgb(20, 113, 189);
-    padding: 5px 20px;
-    border-radius: 10px;
+    background-color: rgb(23, 142, 221);
+    padding: 1.5em;
+    border-radius: 50%;
     font-size: 1em;
     color: white;
-    box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.26);
+    box-shadow: 2px 6px 5px rgba(0, 0, 0, 0.308);
+    border: 0px;
 }
 
 .game-over-button:hover {
     background-color: rgb(6, 72, 126);
+}
+
+.reset,
+.resume {
+    color: black;
+    border: 1px solid black;
+}
+
+.resume {
+    background-color: #78d13c;
+}
+
+.resume:hover {
+    background-color: #315519;
+}
+
+.reset {
+    background-color: #d7da28;
+}
+
+.reset:hover {
+    background-color: #816b09;
 }

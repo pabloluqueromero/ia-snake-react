@@ -1,18 +1,17 @@
-.nav{
-  position:fixed;
-  top:0;
-  height:3vh;
-  width: 60vw;
-  z-index: 2000;
-  background-color: rgb(216, 207, 196);
-  box-shadow: 5px 5px 50px rgb(26, 25, 25);
-  border-bottom-left-radius: 20px;
-  border-bottom-right-radius: 20px;
-  transition: 0.5s ease-in-out;
+.nav {
+    position: fixed;
+    top: 0;
+    height: 3vh;
+    width: 60vw;
+    background-color: rgb(216, 207, 196);
+    box-shadow: 5px 5px 50px rgb(26, 25, 25);
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+    transition: 0.5s ease-in-out;
 }
 
-.nav:hover{
-  height:8vh;
-  width: 80vw;
-  transition:0.5s ease-in-out;
+.nav:hover {
+    height: 8vh;
+    width: 80vw;
+    transition: 0.5s ease-in-out;
 }

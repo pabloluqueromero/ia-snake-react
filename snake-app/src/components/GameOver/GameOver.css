@@ -1,9 +1,11 @@
 .game-over-container {
     width: 60vw;
     height: 80vh;
-    background: rgb(255, 255, 255);
+    background: rgba(255, 255, 255, 0.527);
     display: flex;
     flex-direction: column;
+    justify-content: center;
+    align-items: center;
     box-shadow: 10px 10px 20px rgba(0, 0, 0, 0.7);
     animation-name: fadein;
     animation-duration: 2s;
@@ -12,14 +14,21 @@
 .game-over-title {
     box-shadow: 0px 4px 5px rgba(0, 0, 0, 0.698);
     color: white;
-    font-size: 2em;
-    flex: 1;
-    padding: 0.5em;
+    flex: 2;
     width: 100%;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
-    background: rgb(104, 35, 32);
+    background: rgb(179, 42, 35);
+}
+
+.game-over-title p {
+    font-size: 3em;
+    font-family: 'Black Ops One', cursive;
+    line-height: 5px;
+    text-align: center;
+    text-shadow: 5px 5px #000000;
 }
 
 .game-over-infos-container {
@@ -41,11 +50,22 @@
     align-items: center;
 }
 
+.game-over-modal {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.671);
+}
+
 @keyframes fadein {
     from {
+        opacity: 0;
         transform: scaleX(0.01) scaleY(0.01);
     }
     to {
+        opacity: 100;
         transform: scaleX(1) scaleY(1);
     }
 }

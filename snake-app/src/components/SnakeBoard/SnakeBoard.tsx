@@ -1,5 +1,5 @@
 import React from 'react';
-import { Position } from '../../game/game-utils/Position';
+import Position from '../../game/game-utils/Position';
 import './SnakeBoard.css';
 import Square from './Square';
 
@@ -44,23 +44,28 @@ class SnakeBoard extends React.Component<{}, { score: number, length: number }> 
   }
 
   setScore(newScore: number) {
-    this.setState({ score: newScore });
+    //this.setState({ score: newScore });
   }
 
   setLength(newLength: number) {
-    this.setState({ length: newLength });
+    //this.setState({ length: newLength });
+  }
+
+  shouldComponentUpdate(nextProps, nextState){
+    return false;
   }
   render() {
+    console.log("Rendering Board")
     return (
       <div className='container'>
         <div className="score">
           <div className="score-board-element">
             <h1>SCORE</h1>
-            <h2>{this.state.score}</h2>
+            <h2>{20}</h2>
           </div>
           <div className="score-board-element">
             <h1>LENGHT</h1>
-            <h2>{this.state.length}</h2>
+            <h2>{20}</h2>
           </div>
         </div>
         <div className='grid'

@@ -1,9 +1,8 @@
 import React from 'react';
-import logo from './logo.svg';
 import './App.css';
 import Home from './components/Home/Home';
-import GameOver from './components/GameOver/GameOver';
-import { BrowserRouter, Route, Switch, Redirect } from 'react-router-dom';
+import { BrowserRouter, Route, Switch } from 'react-router-dom';
+import Info from './components/Info/Info';
 
 function App() {
 
@@ -12,11 +11,11 @@ function App() {
       <div>
         <Switch>
           <Route
-            path="/home"
-            component={Home} />
+            path="/info"
+            component={Info} />
           <Route
-            path="/gameOver"
-            render={GameOver} />
+            path="/"
+            component={Home} />
         </Switch>
       </div>
     </BrowserRouter>

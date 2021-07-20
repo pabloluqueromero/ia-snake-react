@@ -123,7 +123,12 @@ export class HeapQueue<T> implements PriorityQueue<T> {
     }
 
     setStrategy(strategy: string): void {
-        return;
+        if(strategy === 'max'){
+            this.cmp = (a,b) => (a-b);
+        }else if(strategy === 'min'){
+            this.cmp = (a,b) => -1*(a-b);
+
+        }
     }
 
     

@@ -1,7 +1,7 @@
 
 import Direction from "../controls/Direction";
 import SnakeGame from "../controls/SnakeGame";
-import { Player } from "./Player";
+import Player from "./Player";
 
 
 const controlKeys = {

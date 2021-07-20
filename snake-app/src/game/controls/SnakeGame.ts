@@ -1,6 +1,7 @@
+import React from 'react';
 import SnakeBoard from '../../components/SnakeBoard/SnakeBoard';
-import { Position } from '../game-utils/Position';
-import { Player } from '../players/Player';
+import Position from '../game-utils/Position';
+import Player from '../players/Player';
 import Direction from './Direction';
 import Snake from './Snake';
 
@@ -23,14 +24,16 @@ class SnakeGame {
     private steps: number;
     private gameCount: number = 0;
     private player: Player;
+    private setIsGameOver: (isGameOver: boolean) => void;
 
-    constructor(rows: number, columns: number, speed: number, board: React.RefObject<SnakeBoard>, player: Player) {
+    constructor(rows: number, columns: number, speed: number, board: React.RefObject<SnakeBoard>, player: Player, setIsGameOver: (isGameOver: boolean) => void) {
         this.rows = rows;
         this.columns = columns;
         this.board = board
         this.speed = speed/10;
         this.player = player;
         this.player.init()
+        this.setIsGameOver = setIsGameOver;
         this.player.setGame(this);
         this.initializeGame()
     }
@@ -95,7 +98,8 @@ class SnakeGame {
             this.resetInterval();
         } catch (e) {
             this.clearInterval();
-            this.initializeGame();
+            this.setIsGameOver(true);
+            //this.initializeGame();
         }
     }
 
@@ -150,6 +154,9 @@ class SnakeGame {
         return [this.rows,this.columns];
     }
 
+    setBoard(board: React.RefObject<SnakeBoard>){
+        this.board = board;
+    }
 
 
     getSnake(): Snake{
