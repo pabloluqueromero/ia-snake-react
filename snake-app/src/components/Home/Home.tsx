@@ -6,17 +6,18 @@ import Player from '../../game/players/Player';
 import GameOver from '../GameOver/GameOver';
 import NavBar from '../NavBar/NavBar';
 import SnakeBoard from '../SnakeBoard/SnakeBoard';
+import SnakeGameUI from '../SnakeGameUI/SnakeGameUI';
 
-let size = 20;
+/* let size = 20;
 let speed = 100;
 let props = { rows: size, columns: size, speed: speed };
 let board = React.createRef<SnakeBoard>();
 let players:Player[] = [new HumanPlayer(),new AStarPlayer()]
-let snakeGame : SnakeGame = null;
+let snakeGame : SnakeGame = null; */
 
 function Home() {
 
-  const [isGameOver, setIsGameOver] = useState(false);
+  /* const [isGameOver, setIsGameOver] = useState(false);
   useEffect(() => {
     console.debug("[Home] Creating New game")
     if(snakeGame==null){
@@ -25,9 +26,9 @@ function Home() {
       snakeGame.setBoard(board);
     }
   },[]);
-
+ */
   return (
-    <div style={{
+   /*  <div style={{
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'center',
@@ -37,10 +38,10 @@ function Home() {
       backgroundColor: '#578A34'
     }}>
       <SnakeBoard ref={board} {...props} />
-      <NavBar></NavBar>
       <GameOver show={isGameOver}></GameOver>
-
-    </div>
+ */
+    <SnakeGameUI/>
+    /*  </div>*/
   );
 }
 

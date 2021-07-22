@@ -99,14 +99,13 @@ class SnakeGame {
         } catch (e) {
             this.clearInterval();
             this.setIsGameOver(true);
-            //this.initializeGame();
         }
     }
 
     getRandomInitialPosition(): Position {
         return new Position(
-            Math.floor(Math.random() * (this.rows - 1)),
-            Math.floor(Math.random() * (this.columns - 1))
+            Math.floor(Math.random() * (this.rows-this.rows/2))+Math.floor(this.rows/4),
+            Math.floor(Math.random() * (this.columns-this.columns/2))+Math.floor(this.columns/4)
         );
     }
 
