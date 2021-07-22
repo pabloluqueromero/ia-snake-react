@@ -41,7 +41,7 @@
 }
 
 .score-board-summary-table-container {
-    flex: 1;
+    flex: 2;
     width: 100%;
     display: flex;
     justify-content: center;

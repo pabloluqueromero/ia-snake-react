@@ -40,7 +40,7 @@
 }
 
 .game-over-button {
-    background-color: rgb(23, 142, 221);
+    background-color: rgb(74, 177, 246);
     padding: 1.5em;
     border-radius: 50%;
     font-size: 1em;
@@ -70,7 +70,7 @@
 }
 
 .reset {
-    background-color: #d7da28;
+    /* background-color: #d7da28; */
 }
 
 .reset:hover {

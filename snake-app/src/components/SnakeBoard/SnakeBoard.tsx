@@ -53,30 +53,16 @@ class SnakeBoard extends React.Component<{}, { score: number, length: number }> 
     //this.setState({ length: newLength });
   }
 
-  shouldComponentUpdate(nextProps, nextState) {
-    return false;
-  }
   render() {
     console.log("Rendering Board")
     return (
-      <div className='container'>
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent:'center',
-          alignItems:'center',
-          height:'100%'
-        }}>
-          <ScoreBoard />
-          <Settings />
-        </div>
-        <div className='grid'
-          style={{
-            gridTemplate: `repeat(${this.rows}, 1fr) /repeat(${this.columns},1fr)`
-          }}>
-        {this.displayBoard()}
-        </div>
-      </div>
+   
+          <div className='grid'
+            style={{
+              gridTemplate: `repeat(${this.rows}, 1fr) /repeat(${this.columns},1fr)`
+            }}>
+            {this.displayBoard()}
+          </div>
     );
   }
 }

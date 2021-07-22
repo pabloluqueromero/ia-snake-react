@@ -45,13 +45,12 @@ class SnakeGame {
         this.applePosition = this.getRandomApplePosition();
         this.score = 0;
         this.lastMovement = null;
-        this.isMoving = true;
+        this.isMoving = false;
         this.gameCount += 1
         if (this.gameCount > 1) {
             this.clearInterval()
         }
         this.setInitialColors();
-        this.resetInterval();
 
     }
     resetInterval() {
