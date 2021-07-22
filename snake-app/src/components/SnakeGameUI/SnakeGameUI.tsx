@@ -36,7 +36,7 @@ function SnakeGameUI() {
 
     useEffect(() => {
         if (snakeGame == null) {
-            snakeGame = new SnakeGame(size, size, speed, board, players[0], setIsGameOver);
+            snakeGame = new SnakeGame(size, size, speed, board, players[1], setIsGameOver);
         } else {
             snakeGame.setBoard(board);
         }

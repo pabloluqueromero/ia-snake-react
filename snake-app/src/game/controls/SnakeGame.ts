@@ -30,7 +30,7 @@ class SnakeGame {
         this.rows = rows;
         this.columns = columns;
         this.board = board
-        this.speed = speed/10;
+        this.speed = speed / 10;
         this.player = player;
         this.player.init()
         this.setIsGameOver = setIsGameOver;
@@ -55,7 +55,7 @@ class SnakeGame {
     }
     resetInterval() {
         this.keepMoving = window.requestAnimationFrame(() => {
-            if(this.isMoving){
+            if (this.isMoving) {
                 this.move();
             }
         });
@@ -103,8 +103,8 @@ class SnakeGame {
 
     getRandomInitialPosition(): Position {
         return new Position(
-            Math.floor(Math.random() * (this.rows-this.rows/2))+Math.floor(this.rows/4),
-            Math.floor(Math.random() * (this.columns-this.columns/2))+Math.floor(this.columns/4)
+            Math.floor(Math.random() * (this.rows - this.rows / 2)) + Math.floor(this.rows / 4),
+            Math.floor(Math.random() * (this.columns - this.columns / 2)) + Math.floor(this.columns / 4)
         );
     }
 
@@ -148,16 +148,16 @@ class SnakeGame {
     getSteps() {
         return this.steps;
     }
-    getDimensions() : [number,number] {
-        return [this.rows,this.columns];
+    getDimensions(): [number, number] {
+        return [this.rows, this.columns];
     }
 
-    setBoard(board: React.RefObject<SnakeBoard>){
+    setBoard(board: React.RefObject<SnakeBoard>) {
         this.board = board;
     }
 
 
-    getSnake(): Snake{
+    getSnake(): Snake {
         return this.snake
     }
 
@@ -165,13 +165,14 @@ class SnakeGame {
         let classNames = []
         if (this.getApplePosition().equals(position)) {
             classNames.push('apple')
-        }
-        if (this.snake.isBody(position)) {
-            classNames.push('body')
-        }
-
-        if (this.snake.isHead(position)) {
-            classNames.push('head')
+        } else {
+            
+            if (this.snake.isBody(position)) {
+                classNames.push('body')
+            }
+            if (this.snake.isHead(position)) {
+                classNames.push('head')
+            }
         }
         if (position.getRow() & 1) {
             classNames.push(position.getColumn() & 1 ? 'dark-cell' : 'light-cell');
@@ -184,7 +185,7 @@ class SnakeGame {
     setInitialColors() {
         for (let i = 0; i < this.rows; i++) {
             for (let j = 0; j < this.columns; j++) {
-                this.setSinglePosition(new Position(i,j));
+                this.setSinglePosition(new Position(i, j));
             }
 
         }

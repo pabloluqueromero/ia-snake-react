@@ -1,7 +1,7 @@
 :root {
-    --snake-light-head: rgb(25, 59, 122);
+    --snake-light-head: rgb(9, 36, 87);
     --snake-dark-head: #83550b;
-    --snake-light: rgb(113, 138, 185);
+    --snake-light: rgba(73, 116, 197, 0.65);
     --snake-dark: #a77017;
     --light-light: #AAD751;
     --light-light-hover: #7fa731;

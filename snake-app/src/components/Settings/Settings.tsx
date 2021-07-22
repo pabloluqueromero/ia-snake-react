@@ -13,7 +13,7 @@ function Settings(props) {
       backgroundColor: 'rgba(255,255,255,0.50)'
     }}>
 
-      <div className="select-algorithm " style={{marginTop:'1em'}}>
+      <div className="select-algorithm ">
         <h3>Select Speed</h3>
         <input type="range" min="1" max="1000" defaultValue="500" id="id1"></input>
       </div>

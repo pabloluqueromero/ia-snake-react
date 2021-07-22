@@ -80,9 +80,9 @@
     display: flex;
     justify-content: center;
     align-content: center;
-    background-color: var(--snake-light) !important;
-    border-radius: 5px;
-    border: 1px solid rgb(24, 24, 24);
+    background-color: var(--snake-light);
+    border-radius: 6px;
+    border: 7px solid rgba(0, 0, 0, 0.561);
 }
 
 
