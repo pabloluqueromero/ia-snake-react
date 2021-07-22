@@ -1,5 +1,7 @@
 import React from 'react';
-import { Position } from '../../game/game-utils/Position';
+import Position from '../../game/game-utils/Position';
+import ScoreBoard from '../ScoreBoard/ScoreBoard';
+import Settings from '../Settings/Settings';
 import './SnakeBoard.css';
 import Square from './Square';
 
@@ -39,37 +41,28 @@ class SnakeBoard extends React.Component<{}, { score: number, length: number }> 
   displayBoard() {
     return this.boardProps.flatMap((row, i) =>
       row.map((props, j) =>
-        <Square key={[i,j].join('-')} ref={this.boardSquares[i][j]} {...props} />
+        <Square key={[i, j].join('-')} ref={this.boardSquares[i][j]} {...props} />
       ))
   }
 
   setScore(newScore: number) {
-    this.setState({ score: newScore });
+    //this.setState({ score: newScore });
   }
 
   setLength(newLength: number) {
-    this.setState({ length: newLength });
+    //this.setState({ length: newLength });
   }
+
   render() {
+    console.log("Rendering Board")
     return (
-      <div className='container'>
-        <div className="score">
-          <div className="score-board-element">
-            <h1>SCORE</h1>
-            <h2>{this.state.score}</h2>
+   
+          <div className='grid'
+            style={{
+              gridTemplate: `repeat(${this.rows}, 1fr) /repeat(${this.columns},1fr)`
+            }}>
+            {this.displayBoard()}
           </div>
-          <div className="score-board-element">
-            <h1>LENGHT</h1>
-            <h2>{this.state.length}</h2>
-          </div>
-        </div>
-        <div className='grid'
-          style={{
-            gridTemplate: `repeat(${this.rows}, 1fr) /repeat(${this.columns},1fr)`
-          }}>
-          {this.displayBoard()}
-        </div>
-      </div>
     );
   }
 }

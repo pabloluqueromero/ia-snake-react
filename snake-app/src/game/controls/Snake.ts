@@ -1,5 +1,5 @@
 import { GameUtils } from "../game-utils/GameUtils";
-import { Position } from "../game-utils/Position";
+import Position from "../game-utils/Position";
 import Direction from "./Direction";
 import SnakeLinkedList from "./SnakeLinkedList";
 

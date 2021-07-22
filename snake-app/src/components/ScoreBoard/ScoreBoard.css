@@ -1,0 +1,49 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat&display=swap');
+* {
+    font-family: 'Montserrat', sans-serif;
+}
+
+.score-board-summary-table {
+    border-collapse: collapse;
+    border-radius: 1em;
+    background-color: rgb(218, 216, 216);
+    overflow: hidden;
+}
+
+.score-board-summary-table thead tr {
+    border-radius: 20px;
+    background-color: rgb(37, 61, 48);
+    font-size: 1.3em;
+}
+
+.score-board-summary-table thead tr td {
+    color: rgb(255, 255, 255);
+    font-weight: bold;
+}
+
+.score-board-summary-table tbody tr:first-child {
+    font-size: 1.2em;
+    border: 3px solid rgb(29, 29, 29);
+    font-weight: bold;
+}
+
+.score-board-summary-table tr:nth-child(even) {
+    background-color: rgb(200, 197, 197);
+}
+
+.score-board-summary-table td {
+    text-align: center;
+    color: black;
+    table-layout: fixed;
+    border-collapse: collapse;
+    vertical-align: middle;
+    padding: 20px 20px;
+}
+
+.score-board-summary-table-container {
+    flex: 2;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
