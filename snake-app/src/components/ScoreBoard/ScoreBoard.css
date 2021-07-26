@@ -5,9 +5,10 @@
 
 .score-board-summary-table {
     border-collapse: collapse;
-    border-radius: 1em;
     background-color: rgb(218, 216, 216);
-    overflow: hidden;
+    width: 100%;
+    align-self: flex-start;
+    position: relative;
 }
 
 .score-board-summary-table thead tr {
@@ -16,9 +17,18 @@
     font-size: 1.3em;
 }
 
+.score-board-summary-table thead {
+    position: sticky;
+    top: 0;
+}
+
 .score-board-summary-table thead tr td {
     color: rgb(255, 255, 255);
     font-weight: bold;
+}
+
+.score-board-summary-table tbody {
+    overflow-x: scroll;
 }
 
 .score-board-summary-table tbody tr:first-child {
@@ -46,4 +56,6 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    overflow-y: auto;
+    overflow-x: hidden;
 }

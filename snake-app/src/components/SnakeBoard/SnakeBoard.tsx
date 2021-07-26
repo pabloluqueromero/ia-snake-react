@@ -34,7 +34,23 @@ class SnakeBoard extends React.Component<{}, { score: number, length: number }> 
 
 
   setPosition(position: Position, classNames: string[]) {
+    this.boardProps[position.getRow()][position.getColumn()].classNames = classNames;
     this.boardSquares[position.getRow()][position.getColumn()].current.changeColor(classNames);
+  }
+
+  //remove visualization attributes except path
+  clearVisualization() {
+    for (let i = 0; i < this.rows; i++) {
+      for (let j = 0; j < this.columns; j++) {
+        let newClassNames = this.boardProps[i][j].classNames
+                                .filter(className => className !== "expanded")
+                                .filter(className => className !== "explored");
+        if (newClassNames.length != this.boardProps[i][j].classNames.length) {
+          this.setPosition(new Position(i, j), newClassNames);
+        }
+
+      }
+    }
   }
 
 
@@ -56,13 +72,13 @@ class SnakeBoard extends React.Component<{}, { score: number, length: number }> 
   render() {
     console.log("Rendering Board")
     return (
-   
-          <div className='grid'
-            style={{
-              gridTemplate: `repeat(${this.rows}, 1fr) /repeat(${this.columns},1fr)`
-            }}>
-            {this.displayBoard()}
-          </div>
+
+      <div className='grid'
+        style={{
+          gridTemplate: `repeat(${this.rows}, 1fr) /repeat(${this.columns},1fr)`
+        }}>
+        {this.displayBoard()}
+      </div>
     );
   }
 }

@@ -17,9 +17,10 @@ const controlKeysOposite = {
     'ArrowRight': Direction.LEFT
 }
 class HumanPlayer implements Player {
+
     private move = Direction.DOWN;
     private game: SnakeGame;
-    
+
     init(): void {
         document.addEventListener("keydown", (event) => {
             switch (event.key) {
@@ -36,6 +37,7 @@ class HumanPlayer implements Player {
                     break;
                 case 'p':
                     if (this.game.isSnakeMoving()) {
+                        console.log("pausing");
                         this.game.pause();
                         return;
                     }
@@ -44,12 +46,15 @@ class HumanPlayer implements Player {
         }, false)
     }
 
+    changeVisualize(): void {
+        //No action
+    }
     setGame(game: SnakeGame): void {
         this.game = game;
     }
 
-    getNextMove(): Direction {
-        return this.move;
+    getNextMove(): Promise<Direction> {
+        return new Promise((resolve, reject) => resolve(this.move));
     }
 }
 

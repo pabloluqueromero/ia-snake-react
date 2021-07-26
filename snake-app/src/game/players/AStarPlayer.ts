@@ -10,16 +10,51 @@ import { GameUtils } from "../game-utils/GameUtils";
 class AStarPlayer implements Player {
     private moves: Direction[] = [];
     private game: SnakeGame;
+    private visualize: boolean = true;
+    private visualizationSpeed: number = 5;
+
     init() {
-        //throw new Error("eded")
+        console.info("[Player] A* player");
     }
+
     setGame(game: SnakeGame): void {
         this.game = game;
     }
 
-    getNextMove(): Direction {
-        this.moves = this.computeNextPath();
-        return this.moves.pop();
+    changeVisualize(): void {
+        this.visualize = !this.visualize;
+        if (!this.visualize) {
+            this.game.getBoard().current.clearVisualization();
+        }
+    }
+
+    async getNextMove(): Promise<Direction> {
+        if (this.moves.length == 0) {
+            if (this.visualize) {
+                this.game.getBoard().current.clearVisualization();
+            }
+            return this.computeNextPath().then(moves => {
+                this.moves = moves;
+                if (this.moves.length == 0){
+                    return this.getMoveToSurvive();
+                }
+                return this.moves.pop();
+            });
+        }
+        return new Promise((resolve, reject) => resolve(this.moves.pop()));
+    }
+    getMoveToSurvive(): Direction {
+        let validDirections = GameUtils.allDirections.
+                filter(direction => {
+                    let nextPosition = GameUtils.applyDirection(this.game.getHeadSnakePosition(),direction)
+                    return GameUtils.isValidPosition(nextPosition, this.game.getDimensions(), this.game.getSnake());
+                })
+        if(validDirections){
+            return validDirections.pop();
+        }else{
+            return Direction.DOWN;
+        }
+    
     }
     getDirection(currPosition: Position, nextPosition: Position): Direction {
         if (currPosition.getRow() < nextPosition.getRow()) {
@@ -33,9 +68,9 @@ class AStarPlayer implements Player {
         }
     }
 
-    computeNextPath(): Direction[] {
+    computeNextPath(): Promise<Direction[]> {
         let moves: Direction[] = []
-        let currentNode = AStarNode.createAStarNode(this.game.getHeadSnakePosition(),0,0,null);
+        let currentNode = AStarNode.createAStarNode(this.game.getHeadSnakePosition(), 0, 0, null);
         let currentNodeID = null;
         let targetNode = this.game.getApplePosition();
 
@@ -43,36 +78,72 @@ class AStarPlayer implements Player {
         let priorityQueue = new HeapQueue<AStarNode>();
         priorityQueue.setStrategy('max');
         priorityQueue.insert(currentNode, currentNode.getPriority());
-        let tempNode : AStarNode;
+        let tempNode: AStarNode;
         let neighbours: Position[];
         let neighbour: Position;
 
-        while (!priorityQueue.isEmpty()) {
-            currentNode = priorityQueue.pop();
-            //console.log(currentNode.getPosition().getRow()+ ' '+ currentNode.getPosition().getColumn())
-            if (currentNode.getPosition().equals(targetNode)) {
-                moves = this.reconstructPath(currentNode);
-                break;
-            }
-            currentNodeID = this.getPositionID(currentNode.getPosition());
-            if (!exploredNodes.has(currentNodeID)) {
+        return new Promise(async (resolve, rejet) => {
+            while (!priorityQueue.isEmpty()) {
+                currentNode = priorityQueue.pop();
+                if (currentNode.getPosition().equals(targetNode)) {
+                    let result = this.reconstructPath(currentNode);
+                    moves = result.map(e => e.direction);
+                    if (this.visualize) {
+                        for (let e of result) {
+                            //Visualize changed
+                            if (!this.visualize) {
+                                this.game.getBoard().current.clearVisualization();
+                                break;
+                            }
+                            await new Promise<void>((resolve) => setTimeout(() => {
+                                if (!this.game.getApplePosition().equals(e.nextPosition) && this.visualize) {
+                                    resolve(this.game.setSinglePosition(e.nextPosition, ["path"]))
+                                }else{
+                                    resolve();
+                                }
+                            }, this.visualizationSpeed * 0.05));
+                        }
+                    }
+                    break;
+                }
+                currentNodeID = this.getPositionID(currentNode.getPosition());
+                if (exploredNodes.has(currentNodeID)) {
+                    continue;
+                }
                 exploredNodes.add(currentNodeID);
-                neighbours = this.getNeighbours(currentNode.getPosition());
-                for(let i=0; i< neighbours.length; i++){
+                if (this.visualize) {
+                    await new Promise((resolve) => setTimeout(() => {
+                        if (this.visualize) {
+                            resolve(this.game.setSinglePosition(currentNode.getPosition(), ["explored"]))
+                        }else{
+                            this.game.getBoard().current.clearVisualization();
+                        }
+                    }, this.visualizationSpeed*0.1));
+
+                }
+                neighbours = this.getNeighbours(currentNode.getPosition())
+                    .filter(neighbour => !exploredNodes.has(this.getPositionID(neighbour)));
+                for (let i = 0; i < neighbours.length; i++) {
                     neighbour = neighbours[i];
-                    tempNode = AStarNode.createAStarNode(neighbour, 
-                                                        this.getDistance(neighbour,targetNode), 
-                                                        currentNode.getCost()+1,currentNode);
+
+                    tempNode = AStarNode.createAStarNode(neighbour,
+                        this.getDistance(neighbour, targetNode),
+                        currentNode.getCost() + 1, currentNode);
                     priorityQueue.insert(tempNode, tempNode.getPriority());
+                    if (this.visualize) {
+                        await new Promise((resolve) => setTimeout(() =>
+                            resolve(this.game.setSinglePosition(tempNode.getPosition(), ["expanded"])), this.visualizationSpeed*0.1));
+                    }
                 }
 
+
             }
-        }
-        return moves;
+            return resolve(moves);
+        });
     }
-    getDistance(neighbour: Position, targetNode: Position) : number {
-        return Math.abs(neighbour.getRow()-targetNode.getRow ()) +
-               Math.abs(neighbour.getColumn()-targetNode.getColumn());
+    getDistance(neighbour: Position, targetNode: Position): number {
+        return Math.abs(neighbour.getRow() - targetNode.getRow()) +
+            Math.abs(neighbour.getColumn() - targetNode.getColumn());
     }
 
     getPositionID(position: Position): number {
@@ -85,14 +156,18 @@ class AStarPlayer implements Player {
             .filter(position => GameUtils.isValidPosition(position, this.game.getDimensions(), this.game.getSnake()));
     }
 
-    reconstructPath(currentNode: AStarNode): Direction[] {
-        if(currentNode==null){
-            return;
+    reconstructPath(currentNode: AStarNode): { direction: Direction, nextPosition: Position }[] {
+        if (currentNode == null) {
+            return [];
         }
-        let directions :Direction[] = [];
-        while(currentNode.getParentNode()!==null){
-            directions.push(GameUtils.getDirection(currentNode.getParentNode().getPosition(), 
-                                                   currentNode.getPosition()))
+        let directions: { direction: Direction, nextPosition: Position }[] = [];
+        while (currentNode.getParentNode() !== null) {
+            directions.push({
+                direction: GameUtils.getDirection(currentNode.getParentNode().getPosition(),
+                    currentNode.getPosition()),
+                nextPosition: currentNode.getParentNode().getPosition()
+            })
+
             currentNode = currentNode.getParentNode();
         }
         return directions;

@@ -22,7 +22,8 @@ class Snake {
 
     //returns if apple was eaten
     move(movement: Direction, applePosition: Position): { appleEaten: boolean, affectedPositions: Position[] } {
-        let nextHeadPosition = GameUtils.applyDirection(this.snake.getPosition(), movement);
+        let previousHeadPosition = this.snake.getPosition()
+        let nextHeadPosition = GameUtils.applyDirection(previousHeadPosition, movement);
         let isApple = nextHeadPosition.equals(applePosition);
         let previousTail = this.snake.getTail().getPosition()
         if (!isApple) {
@@ -35,9 +36,22 @@ class Snake {
         this.bodySet.add(nextHeadPosition.getRow() * this.columns + nextHeadPosition.getColumn());
         
         this.snake.move(nextHeadPosition, isApple);
+        
+        let affectedPositons: Position[] = []
+        // Add previous head to remove color from body if it exists
+        if (this.getSize()>1){
+            affectedPositons.push(previousHeadPosition);
+        }
+        // Add the next head
+        affectedPositons.push(nextHeadPosition);
+
+        // If we have not eaten an apple then we add the tail (to remove it)
+        if (!isApple){
+            affectedPositons.push(previousTail)
+        }
         return {
             appleEaten: isApple,
-            affectedPositions: [nextHeadPosition, isApple ? applePosition : previousTail]
+            affectedPositions: affectedPositons
         };
 
     }

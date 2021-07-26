@@ -1,33 +1,40 @@
 import React, { useEffect, useState } from 'react'
 import SnakeGame from '../../game/controls/SnakeGame';
 import Algorithm from '../../game/game-utils/Algorithm';
-import AStarPlayer from '../../game/players/AStarPlayer';
 import HumanPlayer from '../../game/players/HumanPlayer';
-import Player from '../../game/players/Player';
 import GameOver from '../GameOver/GameOver';
 import ScoreBoard from '../ScoreBoard/ScoreBoard';
 import Settings from '../Settings/Settings';
 import SnakeBoard from '../SnakeBoard/SnakeBoard';
 import './SnakeGameUI.css';
 let size = 21;
-let speed = 100;
+let speed = 500;
 let propsBoard = { rows: size, columns: size, speed: speed };
 let board = React.createRef<SnakeBoard>();
-let players: Player[] = [new HumanPlayer(), new AStarPlayer()]
 let snakeGame: SnakeGame = null;
 
 
 function setAlgorithm(algorithm: Algorithm) {
-    
+    console.debug(`Changin Player ${algorithm}`);
+    snakeGame.setPlayer(algorithm);
 }
 
+function changeVisualize() {
+    console.debug(`Changin visualize`);
+    snakeGame.getPlayer().changeVisualize();
+}
+
+function setSpeed(speed: Algorithm) {
+    console.debug(`Changing speed ${speed}`);
+    snakeGame.setSpeed(speed);
+}
 function SnakeGameUI() {
     const [isGameOver, setIsGameOver] = useState(false);
 
-    useEffect(()=>{
-        window.addEventListener('keydown', (e)=>{
-            if(e.key==='Enter'){
-            snakeGame.resume();
+    useEffect(() => {
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                snakeGame.resume();
             }
         })
     })
@@ -35,8 +42,8 @@ function SnakeGameUI() {
     let restartGameCallback: () => void = () => { setIsGameOver(false); snakeGame.initializeGame(); };
 
     useEffect(() => {
-        if (snakeGame == null) {
-            snakeGame = new SnakeGame(size, size, speed, board, players[1], setIsGameOver);
+        if (snakeGame === null) {
+            snakeGame = new SnakeGame(size, size, speed, board, new HumanPlayer(), setIsGameOver, );
         } else {
             snakeGame.setBoard(board);
         }
@@ -61,22 +68,24 @@ function SnakeGameUI() {
                     height: '100%',
                     width: '100%',
                     backgroundColor: 'rgba(255,255,255,0.30)'
-                    
+
                 }}>
                     <div style={{
                         display: 'flex',
                         top: '1em',
-                        width:'100%',
+                        width: '100%',
                         backgroundColor: 'rgba(255,255,255,0.60)',
-                        justifyContent:'center',
-                        alignContent:'center'
-                }}>
-                    <a className="no-style-anchor" href="/home"><i className="fas fa-2x fa-arrow-left"></i></a>
-                    <h1 style={{fontFamily:'Black Ops One, cursive',
-                flex:8,textAlign:'center'}}>Snake Game AI</h1>
-                </div>
+                        justifyContent: 'center',
+                        alignContent: 'center'
+                    }}>
+                        <a className="no-style-anchor" href="/home"><i className="fas fa-2x fa-arrow-left"></i></a>
+                        <h1 style={{
+                            fontFamily: 'Black Ops One, cursive',
+                            flex: 8, textAlign: 'center'
+                        }}>Snake Game AI</h1>
+                    </div>
                     <ScoreBoard />
-                    <Settings setAlgorithm = {(algorithm:Algorithm)=>{ setAlgorithm(Algorithm.HUMAN);}}/>
+                    <Settings setAlgorithm={setAlgorithm} setSpeed={setSpeed} changeVisualize={changeVisualize}/>
                 </div>
                 <div style={{
                     display: 'flex',

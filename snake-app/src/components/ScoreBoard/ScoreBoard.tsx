@@ -1,6 +1,8 @@
 import React from 'react'
 import './ScoreBoard.css'
+
 function ScoreBoard(props) {
+    
     return (
         <div className="score-board-summary-table-container">
             <table className="score-board-summary-table">
@@ -14,7 +16,97 @@ function ScoreBoard(props) {
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
+                <tr>
+                        <td>#3</td>
+                        <td>Hamiltionian</td>
+                        <td>80</td>
+                        <td>230</td>
+                        <td>30.5</td>
+                    </tr><tr>
+                        <td>#3</td>
+                        <td>Hamiltionian</td>
+                        <td>80</td>
+                        <td>230</td>
+                        <td>30.5</td>
+                    </tr><tr>
+                        <td>#3</td>
+                        <td>Hamiltionian</td>
+                        <td>80</td>
+                        <td>230</td>
+                        <td>30.5</td>
+                    </tr><tr>
+                        <td>#3</td>
+                        <td>Hamiltionian</td>
+                        <td>80</td>
+                        <td>230</td>
+                        <td>30.5</td>
+                    </tr><tr>
+                        <td>#3</td>
+                        <td>Hamiltionian</td>
+                        <td>80</td>
+                        <td>230</td>
+                        <td>30.5</td>
+                    </tr><tr>
+                        <td>#3</td>
+                        <td>Hamiltionian</td>
+                        <td>80</td>
+                        <td>230</td>
+                        <td>30.5</td>
+                    </tr><tr>
+                        <td>#3</td>
+                        <td>Hamiltionian</td>
+                        <td>80</td>
+                        <td>230</td>
+                        <td>30.5</td>
+                    </tr><tr>
+                        <td>#3</td>
+                        <td>Hamiltionian</td>
+                        <td>80</td>
+                        <td>230</td>
+                        <td>30.5</td>
+                    </tr><tr>
+                        <td>#3</td>
+                        <td>Hamiltionian</td>
+                        <td>80</td>
+                        <td>230</td>
+                        <td>30.5</td>
+                    </tr><tr>
+                        <td>#3</td>
+                        <td>Hamiltionian</td>
+                        <td>80</td>
+                        <td>230</td>
+                        <td>30.5</td>
+                    </tr><tr>
+                        <td>#3</td>
+                        <td>Hamiltionian</td>
+                        <td>80</td>
+                        <td>230</td>
+                        <td>30.5</td>
+                    </tr><tr>
+                        <td>#3</td>
+                        <td>Hamiltionian</td>
+                        <td>80</td>
+                        <td>230</td>
+                        <td>30.5</td>
+                    </tr><tr>
+                        <td>#3</td>
+                        <td>Hamiltionian</td>
+                        <td>80</td>
+                        <td>230</td>
+                        <td>30.5</td>
+                    </tr><tr>
+                        <td>#3</td>
+                        <td>Hamiltionian</td>
+                        <td>80</td>
+                        <td>230</td>
+                        <td>30.5</td>
+                    </tr><tr>
+                        <td>#3</td>
+                        <td>Hamiltionian</td>
+                        <td>80</td>
+                        <td>230</td>
+                        <td>30.5</td>
+                    </tr><tr>
                         <td>#3</td>
                         <td>Hamiltionian</td>
                         <td>80</td>
