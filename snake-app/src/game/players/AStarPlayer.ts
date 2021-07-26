@@ -101,7 +101,7 @@ class AStarPlayer implements Player {
                                 }else{
                                     resolve();
                                 }
-                            }, this.visualizationSpeed * 0.05));
+                            }, this.visualizationSpeed*10));
                         }
                     }
                     break;

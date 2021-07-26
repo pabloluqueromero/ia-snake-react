@@ -80,7 +80,6 @@ class SnakeGame {
     }
     setPlayer(algorithm: Algorithm) {
         this.pause();
-        console.log(algorithm === Algorithm.HUMAN)
         switch (algorithm) {
             case Algorithm.HUMAN:
                 this.player = new HumanPlayer();

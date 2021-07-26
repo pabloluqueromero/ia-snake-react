@@ -1,7 +1,5 @@
 import React from 'react';
 import Position from '../../game/game-utils/Position';
-import ScoreBoard from '../ScoreBoard/ScoreBoard';
-import Settings from '../Settings/Settings';
 import './SnakeBoard.css';
 import Square from './Square';
 
@@ -45,7 +43,7 @@ class SnakeBoard extends React.Component<{}, { score: number, length: number }> 
         let newClassNames = this.boardProps[i][j].classNames
                                 .filter(className => className !== "expanded")
                                 .filter(className => className !== "explored");
-        if (newClassNames.length != this.boardProps[i][j].classNames.length) {
+        if (newClassNames.length !== this.boardProps[i][j].classNames.length) {
           this.setPosition(new Position(i, j), newClassNames);
         }
 
