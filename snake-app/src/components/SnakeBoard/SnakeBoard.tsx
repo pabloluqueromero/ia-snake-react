@@ -59,13 +59,6 @@ class SnakeBoard extends React.Component<{}, { score: number, length: number }> 
       ))
   }
 
-  setScore(newScore: number) {
-    //this.setState({ score: newScore });
-  }
-
-  setLength(newLength: number) {
-    //this.setState({ length: newLength });
-  }
 
   render() {
     console.log("Rendering Board")

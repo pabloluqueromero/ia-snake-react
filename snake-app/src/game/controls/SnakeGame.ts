@@ -1,4 +1,5 @@
 import React from 'react';
+import ScoreBoard from '../../components/ScoreBoard/ScoreBoard';
 import SnakeBoard from '../../components/SnakeBoard/SnakeBoard';
 import Algorithm from '../game-utils/Algorithm';
 import Position from '../game-utils/Position';
@@ -11,6 +12,7 @@ import Snake from './Snake';
 class SnakeGame {
     // Game state variables
     private board: React.RefObject<SnakeBoard>;
+    private scoreBoard: React.RefObject<ScoreBoard>;
     private applePosition: Position;
     private rows: number;
     private columns: number;
@@ -30,10 +32,11 @@ class SnakeGame {
     private player: Player;
     private setIsGameOver: (isGameOver: boolean) => void;
 
-    constructor(rows: number, columns: number, speed: number, board: React.RefObject<SnakeBoard>, player: Player, setIsGameOver: (isGameOver: boolean) => void) {
+    constructor(rows: number, columns: number, speed: number, board: React.RefObject<SnakeBoard>, scoreBoard: React.RefObject<ScoreBoard>, player: Player, setIsGameOver: (isGameOver: boolean) => void) {
         this.rows = rows;
         this.columns = columns;
         this.board = board
+        this.scoreBoard = scoreBoard
         this.speed = speed / 10;
         this.player = player;
         this.setIsGameOver = setIsGameOver;
@@ -75,7 +78,7 @@ class SnakeGame {
         this.speed = speed;
     }
 
-    getPlayer(): Player{
+    getPlayer(): Player {
         return this.player;
     }
     setPlayer(algorithm: Algorithm) {
@@ -109,15 +112,15 @@ class SnakeGame {
                 this.isMoving = true;
                 let result = this.snake.move(nextMovement, this.applePosition);
                 this.setLastMovement(nextMovement);
+                this.scoreBoard.current.increaseSteps();
 
                 if (result.appleEaten) {
+                    this.scoreBoard.current.increaseScore();
                     //console.debug("[SnakeGame] Eating apple")
                     this.score += 1;
-                    this.board.current.setScore(this.score);
                     this.applePosition = this.getRandomApplePosition();
                     result.affectedPositions.push(this.applePosition);
                 }
-                this.board.current.setLength(this.getSnakeLength());
 
                 //console.debug(`[SnakeGame] updating ${result.affectedPositions.length} positions`)
                 result.affectedPositions.forEach(affectedPosition => this.setSinglePosition(affectedPosition));
@@ -125,6 +128,7 @@ class SnakeGame {
             }).catch(error => {
                 console.log(error);
                 this.clearInterval();
+                this.scoreBoard.current.saveGame();
                 this.setIsGameOver(true);
             });
     }

@@ -11,6 +11,7 @@ let size = 21;
 let speed = 500;
 let propsBoard = { rows: size, columns: size, speed: speed };
 let board = React.createRef<SnakeBoard>();
+let scoreBoard = React.createRef<ScoreBoard>();
 let snakeGame: SnakeGame = null;
 
 
@@ -43,7 +44,7 @@ function SnakeGameUI() {
 
     useEffect(() => {
         if (snakeGame === null) {
-            snakeGame = new SnakeGame(size, size, speed, board, new HumanPlayer(), setIsGameOver, );
+            snakeGame = new SnakeGame(size, size, speed, board, scoreBoard, new HumanPlayer(), setIsGameOver);
         } else {
             snakeGame.setBoard(board);
         }
@@ -84,7 +85,7 @@ function SnakeGameUI() {
                             flex: 8, textAlign: 'center'
                         }}>Snake Game AI</h1>
                     </div>
-                    <ScoreBoard />
+                    <ScoreBoard ref={scoreBoard} {...{algorithm:Algorithm.HUMAN}}/>
                     <Settings setAlgorithm={setAlgorithm} setSpeed={setSpeed} changeVisualize={changeVisualize}/>
                 </div>
                 <div style={{
