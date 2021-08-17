@@ -80,7 +80,7 @@ function SnakeGameUI() {
                         justifyContent: 'center',
                         alignContent: 'center'
                     }}>
-                        <a className="no-style-anchor" href="/home"><i className="fas fa-2x fa-arrow-left"></i></a>
+                        {/* <a className="no-style-anchor" href="/home"><i className="fas fa-2x fa-arrow-left"></i></a> */}
                         <h1 style={{
                             fontFamily: 'Black Ops One, cursive',
                             flex: 8, textAlign: 'center'
