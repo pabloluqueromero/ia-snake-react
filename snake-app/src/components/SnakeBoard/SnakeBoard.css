@@ -130,37 +130,45 @@
 .path::after {
     background-color: rgb(255, 255, 255);
     transform: scale(0.6, 0.6);
-    animation: pathanimation 0.1s ease-in;
+    animation: pathanimation 0.5s ease-in;
 }
 
 .explored::after {
-    background-color: rgba(241, 228, 39, 0.829);
-    animation: exploredanimation 0.2s ease-in;
-    transition: background-color 0.3s ease-in;
+    animation: exploredanimation 0.6s ease-in;
     transform: scale(0.7, 0.7);
+    background-color: rgb(255, 238, 0);
 }
 
 @keyframes exploredanimation {
     0% {
+        border-radius: 50%;
         transform: scale(0.8, 0.8);
     }
     60% {
+        border-radius: 25%;
         transform: scale(0.5, 0.5);
     }
     100% {
+        border-radius: 0%;
+        background-color: rgba(241, 228, 39, 0.829);
         transform: scale(0.7, 0.7);
     }
 }
 
 @keyframes expandedanimation {
     0% {
+        border-radius: 50%;
         transform: scale(0, 0);
+        background-color: rgba(114, 102, 218, 0.794);
     }
     60% {
+        border-radius: 25%;
         transform: scale(0.9, 0.9);
     }
     100% {
+        border-radius: 0%;
         transform: scale(0.7, 0.7);
+        background-color: rgba(172, 73, 175, 0.794);
     }
 }
 
@@ -179,5 +187,5 @@
 .expanded::after {
     background-color: rgba(172, 73, 175, 0.794);
     transform: scale(0.7, 0.7);
-    animation: expandedanimation 0.1s ease-in;
+    animation: expandedanimation 1s ease-in;
 }

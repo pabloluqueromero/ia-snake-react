@@ -3,7 +3,7 @@ import './GameOver.css';
 import GameOverInfo from './GameOverInfo';
 import GameOverInfos from './GameOverInfos';
 
-function GameOver(props: { show: boolean, restartGameCallback: () => void }) {
+function GameOver(props: { show: boolean, restartGameCallback: () => void, clearScoreBoard: () => void }) {
     if (!props.show) {
         return null;
     }
@@ -25,17 +25,15 @@ function GameOver(props: { show: boolean, restartGameCallback: () => void }) {
                     backgroundColor: 'rgb(51, 51, 51)'
                 }}></div>
                 <div className="game-over-options">
-                    <button className="reset table game-over-button"><i className="fas fa-undo-alt"></i></button>
+                    <button className="reset table game-over-button" onClick={() => { props.clearScoreBoard(); }}><i className="fas fa-undo-alt"></i></button>
                     <button className="resume game-over-button" onClick={() => { props.restartGameCallback(); }}><i className="fas fa-2x fa-play-circle"></i></button>
-                    <button className="reset home game-over-button "><i className="fas fa-home"></i></button>
+                    <button className="reset home game-over-button" onClick={() => { props.restartGameCallback(); }}><i className="fas fa-home"></i></button>
                 </div>
             </div>
         </div>
     )
 }
 
-{/* <button className="reset game-over-button "><i className="fas fa-sliders-h"></i></button>
-<button className="reset game-over-button"><i className="fas fa-undo-alt"></i></button> */}
 
 export default GameOver
 

@@ -4,6 +4,7 @@ import SnakeBoard from '../../components/SnakeBoard/SnakeBoard';
 import Algorithm from '../game-utils/Algorithm';
 import Position from '../game-utils/Position';
 import AStarPlayer from '../players/AStarPlayer';
+import HamiltonianPlayer from '../players/HamiltonianPlayer';
 import HumanPlayer from '../players/HumanPlayer';
 import Player from '../players/Player';
 import Direction from './Direction';
@@ -86,6 +87,9 @@ class SnakeGame {
         switch (algorithm) {
             case Algorithm.HUMAN:
                 this.player = new HumanPlayer();
+                break;
+            case Algorithm.HAMILTONIANCYCLE:
+                this.player = new HamiltonianPlayer();
                 break;
             default:
                 this.player = new AStarPlayer();

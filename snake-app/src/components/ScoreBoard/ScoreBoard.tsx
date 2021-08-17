@@ -7,6 +7,20 @@ class ScoreBoard extends React.Component<{},
         firstScore: { id: number, algorithm: string, score: number, stepCount, avgSteps: number }
         scoreList: { id: number, algorithm: string, score: number, stepCount, avgSteps: number }[]
     }> {
+    clearScoreBoard() {
+        this.setState(prevState=>{
+            return {
+                firstScore: {
+                    id: 0,
+                    algorithm: prevState.firstScore.algorithm.toString(),
+                    score: prevState.firstScore.score,
+                    stepCount: prevState.firstScore.stepCount,
+                    avgSteps: Math.round(((prevState.firstScore.stepCount / (prevState.firstScore.score+1)) + Number.EPSILON) * 100) / 100
+                },
+                scoreList: []
+            }
+        })
+    }
 
     private id: number = 0;
     constructor(props: { algorithm: Algorithm }) {
@@ -50,6 +64,11 @@ class ScoreBoard extends React.Component<{},
                 newState.algorithm = "Human";
                 this.setState(newState);
                 break;
+            case Algorithm.HAMILTONIANCYCLE:
+                newState = this.getNewState();
+                newState.algorithm = "Hamiltonian";
+                this.setState(newState);
+                break;
             default:
                 newState = this.getNewState();
                 newState.algorithm = "A*";
@@ -60,7 +79,6 @@ class ScoreBoard extends React.Component<{},
 
     increaseScore() {
         this.setState(prevState => {
-            console.log("increasing: " + prevState.firstScore.score)
             return {
                 firstScore: {
                     id: prevState.firstScore.id,

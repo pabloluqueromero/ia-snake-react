@@ -29,13 +29,13 @@ class AStarPlayer implements Player {
     }
 
     async getNextMove(): Promise<Direction> {
-        if (this.moves.length == 0) {
+        if (this.moves.length === 0) {
             if (this.visualize) {
                 this.game.getBoard().current.clearVisualization();
             }
             return this.computeNextPath().then(moves => {
                 this.moves = moves;
-                if (this.moves.length == 0){
+                if (this.moves.length === 0){
                     return this.getMoveToSurvive();
                 }
                 return this.moves.pop();
@@ -44,8 +44,8 @@ class AStarPlayer implements Player {
         return new Promise((resolve, reject) => resolve(this.moves.pop()));
     }
     getMoveToSurvive(): Direction {
-        let validDirections = GameUtils.allDirections.
-                filter(direction => {
+        let validDirections = GameUtils.allDirections
+                .filter(direction => {
                     let nextPosition = GameUtils.applyDirection(this.game.getHeadSnakePosition(),direction)
                     return GameUtils.isValidPosition(nextPosition, this.game.getDimensions(), this.game.getSnake());
                 })
@@ -55,17 +55,6 @@ class AStarPlayer implements Player {
             return Direction.DOWN;
         }
     
-    }
-    getDirection(currPosition: Position, nextPosition: Position): Direction {
-        if (currPosition.getRow() < nextPosition.getRow()) {
-            return Direction.DOWN;
-        } else if (currPosition.getColumn() < nextPosition.getColumn()) {
-            return Direction.RIGHT;
-        } else if (currPosition.getColumn() > nextPosition.getColumn()) {
-            return Direction.LEFT;
-        } else {
-            return Direction.UP;
-        }
     }
 
     computeNextPath(): Promise<Direction[]> {
@@ -78,7 +67,6 @@ class AStarPlayer implements Player {
         let priorityQueue = new HeapQueue<AStarNode>();
         priorityQueue.setStrategy('max');
         priorityQueue.insert(currentNode, currentNode.getPriority());
-        let tempNode: AStarNode;
         let neighbours: Position[];
         let neighbour: Position;
 
@@ -103,8 +91,12 @@ class AStarPlayer implements Player {
                                 }
                             }, this.visualizationSpeed*10));
                         }
+                        //Wait for visualization to end
+                        await new Promise<void>((resolve) => setTimeout(() => {
+                            resolve();
+                        }, this.visualizationSpeed*100));
+                        break;
                     }
-                    break;
                 }
                 currentNodeID = this.getPositionID(currentNode.getPosition());
                 if (exploredNodes.has(currentNodeID)) {
@@ -114,7 +106,8 @@ class AStarPlayer implements Player {
                 if (this.visualize) {
                     await new Promise((resolve) => setTimeout(() => {
                         if (this.visualize) {
-                            resolve(this.game.setSinglePosition(currentNode.getPosition(), ["explored"]))
+                            //resolve(this.game.setSinglePosition(currentNode.getPosition(), ["explored"]))
+                            resolve(1)
                         }else{
                             this.game.getBoard().current.clearVisualization();
                         }
@@ -126,7 +119,7 @@ class AStarPlayer implements Player {
                 for (let i = 0; i < neighbours.length; i++) {
                     neighbour = neighbours[i];
 
-                    tempNode = AStarNode.createAStarNode(neighbour,
+                    let tempNode = AStarNode.createAStarNode(neighbour,
                         this.getDistance(neighbour, targetNode),
                         currentNode.getCost() + 1, currentNode);
                     priorityQueue.insert(tempNode, tempNode.getPriority());
@@ -157,7 +150,7 @@ class AStarPlayer implements Player {
     }
 
     reconstructPath(currentNode: AStarNode): { direction: Direction, nextPosition: Position }[] {
-        if (currentNode == null) {
+        if (currentNode === null) {
             return [];
         }
         let directions: { direction: Direction, nextPosition: Position }[] = [];

@@ -21,7 +21,7 @@ function setAlgorithm(algorithm: Algorithm) {
 }
 
 function changeVisualize() {
-    console.debug(`Changin visualize`);
+    console.debug(`Changing visualize`);
     snakeGame.getPlayer().changeVisualize();
 }
 
@@ -41,6 +41,7 @@ function SnakeGameUI() {
     })
     //Callbacks
     let restartGameCallback: () => void = () => { setIsGameOver(false); snakeGame.initializeGame(); };
+    let clearScoreBoard: () => void = () => { scoreBoard.current.clearScoreBoard() };
 
     useEffect(() => {
         if (snakeGame === null) {
@@ -99,7 +100,7 @@ function SnakeGameUI() {
                     <SnakeBoard ref={board} {...propsBoard} />
                 </div>
             </div>
-            <GameOver show={isGameOver} restartGameCallback={restartGameCallback} />
+            <GameOver show={isGameOver} restartGameCallback={restartGameCallback} clearScoreBoard={clearScoreBoard} />
         </div>
 
 

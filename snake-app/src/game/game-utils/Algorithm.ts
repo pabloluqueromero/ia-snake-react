@@ -1,5 +1,5 @@
 enum Algorithm {
-  HUMAN, ASTAR
+  HUMAN, ASTAR, HAMILTONIANCYCLE
 }
 
 export default Algorithm;

@@ -11,7 +11,8 @@ function Settings(props: { setAlgorithm: (algorithm:Algorithm) => void,
       padding: '10px 20px',
       display: 'flex',
       justifyContent: 'space-evenly',
-      backgroundColor: 'rgba(255,255,255,0.50)'
+      backgroundColor: 'rgba(255,255,255,0.50)',
+      position:'relative'
     }}>
 
       <div className="select-algorithm ">
@@ -32,19 +33,23 @@ function Settings(props: { setAlgorithm: (algorithm:Algorithm) => void,
           <input type="radio" name="radio" onChange={(e) => { if ('on' === e.currentTarget.value) { props.setAlgorithm(Algorithm.ASTAR) } }} />
           <span className="checkmark"></span>
         </label>
-        <label className="setting-algorithm-radio-container">Hamiltonian
-          <input type="radio" name="radio" onChange={(e) => { if ('on' === e.currentTarget.value) { props.setAlgorithm(Algorithm.ASTAR) } }} />
+        {/* <label className="setting-algorithm-radio-container">Hamiltonian
+          <input type="radio" name="radio" disabled={true} onChange={(e) => { if ('on' === e.currentTarget.value) { props.setAlgorithm(Algorithm.HAMILTONIANCYCLE) } }} />
           <span className="checkmark"></span>
         </label>
         <label className="setting-algorithm-radio-container">Smart Hamiltonian
-          <input type="radio" name="radio" onChange={(e) => { if ('on' === e.currentTarget.value) { props.setAlgorithm(Algorithm.ASTAR) } }} />
+          <input type="radio" name="radio" disabled={true} onChange={(e) => { if ('on' === e.currentTarget.value) { props.setAlgorithm(Algorithm.ASTAR) } }} />
           <span className="checkmark"></span>
         </label>
-        <label className="setting-algorithm-radio-container">Neural Net
-          <input type="radio" name="radio" onChange={(e) => { if ('on' === e.currentTarget.value) { props.setAlgorithm(Algorithm.ASTAR) } }} />
+        <label className="setting-algorithm-radio-container" >Neural Net
+          <input type="radio" name="radio" disabled={true} onChange={(e) => { if ('on' === e.currentTarget.value) { props.setAlgorithm(Algorithm.ASTAR) } }} />
           <span className="checkmark"></span>
-        </label>
+        </label> */}
 
+      </div>
+
+      <div className="instructions">
+        Press ENTER to start playing
       </div>
     </div>
   )
