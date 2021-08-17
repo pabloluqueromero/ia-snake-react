@@ -1,0 +1,23 @@
+{
+  "files": {
+    "main.css": "/ia-snake-react/static/css/main.ee7db3ad.chunk.css",
+    "main.js": "/ia-snake-react/static/js/main.41c06f10.chunk.js",
+    "main.js.map": "/ia-snake-react/static/js/main.41c06f10.chunk.js.map",
+    "runtime-main.js": "/ia-snake-react/static/js/runtime-main.94599575.js",
+    "runtime-main.js.map": "/ia-snake-react/static/js/runtime-main.94599575.js.map",
+    "static/js/2.d3d4c28d.chunk.js": "/ia-snake-react/static/js/2.d3d4c28d.chunk.js",
+    "static/js/2.d3d4c28d.chunk.js.map": "/ia-snake-react/static/js/2.d3d4c28d.chunk.js.map",
+    "static/js/3.2980d4dc.chunk.js": "/ia-snake-react/static/js/3.2980d4dc.chunk.js",
+    "static/js/3.2980d4dc.chunk.js.map": "/ia-snake-react/static/js/3.2980d4dc.chunk.js.map",
+    "index.html": "/ia-snake-react/index.html",
+    "static/css/main.ee7db3ad.chunk.css.map": "/ia-snake-react/static/css/main.ee7db3ad.chunk.css.map",
+    "static/js/2.d3d4c28d.chunk.js.LICENSE.txt": "/ia-snake-react/static/js/2.d3d4c28d.chunk.js.LICENSE.txt",
+    "static/media/SnakeBoard.css": "/ia-snake-react/static/media/apple.a7b55597.png"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.94599575.js",
+    "static/js/2.d3d4c28d.chunk.js",
+    "static/css/main.ee7db3ad.chunk.css",
+    "static/js/main.41c06f10.chunk.js"
+  ]
+}
