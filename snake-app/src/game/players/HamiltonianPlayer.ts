@@ -70,17 +70,14 @@ class HamiltonianPlayer implements Player {
             
             visitedPostions.delete(positionId);
             return new Position(-1,-1);
-
         }
-        
-        //backtrack
-        visitedPostions.delete(positionId);
-        return new Position(-1,-1);
-        
-        
     }
 
     changeVisualize(): void {
+        /*Not implemented yet*/
+    }
+
+    destroy(): void {
         /*Not implemented yet*/
     }
 

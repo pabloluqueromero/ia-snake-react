@@ -6,4 +6,5 @@ export default interface Player {
     setGame(game: SnakeGame): void;
     changeVisualize(): void;
     getNextMove(): Promise<Direction>;
+    destroy?(): void;
 }

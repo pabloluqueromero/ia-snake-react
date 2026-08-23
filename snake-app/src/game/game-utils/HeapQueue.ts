@@ -86,7 +86,10 @@ export class HeapQueue<T> implements PriorityQueue<T> {
         return;
     }
     peek(): T {
-        throw new Error("Method not implemented.");
+        if (this.data.length === 0) {
+            throw new Error("Queue is empty");
+        }
+        return this.data[0].getData();
     }
     pop(): T {
         let last_val = this.data.pop();
@@ -122,12 +125,11 @@ export class HeapQueue<T> implements PriorityQueue<T> {
         return this.length === 0;
     }
 
-    setStrategy(strategy: string): void {
-        if(strategy === 'max'){
-            this.cmp = (a:number,b:number) => (a-b);
-        }else if(strategy === 'min'){
-            this.cmp = (a:number,b:number) => -1*(a-b);
-
+    setStrategy(strategy: 'min' | 'max' | string): void {
+        if (strategy === 'min') {
+            this.cmp = (a: number, b: number) => (a - b);
+        } else if (strategy === 'max') {
+            this.cmp = (a: number, b: number) => (b - a);
         }
     }
 

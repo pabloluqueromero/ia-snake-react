@@ -22,38 +22,39 @@ class Snake {
 
     //returns if apple was eaten
     move(movement: Direction, applePosition: Position): { appleEaten: boolean, affectedPositions: Position[] } {
-        let previousHeadPosition = this.snake.getPosition()
+        let previousHeadPosition = this.snake.getPosition();
         let nextHeadPosition = GameUtils.applyDirection(previousHeadPosition, movement);
         let isApple = nextHeadPosition.equals(applePosition);
-        let previousTail = this.snake.getTail().getPosition()
+        let previousTail = this.snake.getTail().getPosition();
+        let tailPositionID = previousTail.getRow() * this.columns + previousTail.getColumn();
+
         if (!isApple) {
-            let tailPositionID = this.snake.getTail().getPosition().getRow() * this.columns + this.snake.getTail().getPosition().getColumn();
-            this.bodySet.delete(tailPositionID); //delete to avoid unexistant colision
-            if(!GameUtils.isValidPosition(nextHeadPosition, [this.rows, this.columns], this)){
-                throw new Error("Collision")
-            };
+            this.bodySet.delete(tailPositionID); // temporarily remove tail to avoid false collision
         }
+
+        if (!GameUtils.isValidPosition(nextHeadPosition, [this.rows, this.columns], this)) {
+            if (!isApple) {
+                this.bodySet.add(tailPositionID); // rollback bodySet on collision
+            }
+            throw new Error("Collision");
+        }
+
         this.bodySet.add(nextHeadPosition.getRow() * this.columns + nextHeadPosition.getColumn());
-        
         this.snake.move(nextHeadPosition, isApple);
         
-        let affectedPositons: Position[] = []
-        // Add previous head to remove color from body if it exists
-        if (this.getSize()>1){
-            affectedPositons.push(previousHeadPosition);
+        let affectedPositions: Position[] = [];
+        if (this.getSize() > 1) {
+            affectedPositions.push(previousHeadPosition);
         }
-        // Add the next head
-        affectedPositons.push(nextHeadPosition);
+        affectedPositions.push(nextHeadPosition);
+        if (!isApple) {
+            affectedPositions.push(previousTail);
+        }
 
-        // If we have not eaten an apple then we add the tail (to remove it)
-        if (!isApple){
-            affectedPositons.push(previousTail)
-        }
         return {
             appleEaten: isApple,
-            affectedPositions: affectedPositons
+            affectedPositions: affectedPositions
         };
-
     }
 
     getSize() {

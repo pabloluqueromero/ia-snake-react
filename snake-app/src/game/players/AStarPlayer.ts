@@ -28,112 +28,105 @@ class AStarPlayer implements Player {
         }
     }
 
+    destroy(): void {
+        this.moves = [];
+        if (this.game && this.game.getBoard() && this.game.getBoard().current) {
+            this.game.getBoard().current.clearVisualization();
+        }
+    }
+
     async getNextMove(): Promise<Direction> {
         if (this.moves.length === 0) {
-            if (this.visualize) {
+            if (this.visualize && this.game.getBoard() && this.game.getBoard().current) {
                 this.game.getBoard().current.clearVisualization();
             }
-            return this.computeNextPath().then(moves => {
-                this.moves = moves;
-                if (this.moves.length === 0){
-                    return this.getMoveToSurvive();
-                }
-                return this.moves.pop();
-            });
+            const moves = await this.computeNextPath();
+            this.moves = moves;
+            if (this.moves.length === 0) {
+                return this.getMoveToSurvive();
+            }
+            return this.moves.pop();
         }
-        return new Promise((resolve, reject) => resolve(this.moves.pop()));
+        return this.moves.pop();
     }
+
     getMoveToSurvive(): Direction {
-        let validDirections = GameUtils.allDirections
-                .filter(direction => {
-                    let nextPosition = GameUtils.applyDirection(this.game.getHeadSnakePosition(),direction)
-                    return GameUtils.isValidPosition(nextPosition, this.game.getDimensions(), this.game.getSnake());
-                })
-        if(validDirections){
-            return validDirections.pop();
-        }else{
+        const validDirections = GameUtils.allDirections
+            .filter(direction => {
+                const nextPosition = GameUtils.applyDirection(this.game.getHeadSnakePosition(), direction);
+                return GameUtils.isValidPosition(nextPosition, this.game.getDimensions(), this.game.getSnake());
+            });
+        if (validDirections.length > 0) {
+            return validDirections[0];
+        } else {
             return Direction.DOWN;
         }
-    
     }
 
-    computeNextPath(): Promise<Direction[]> {
-        let moves: Direction[] = []
+    async computeNextPath(): Promise<Direction[]> {
+        let moves: Direction[] = [];
         let currentNode = AStarNode.createAStarNode(this.game.getHeadSnakePosition(), 0, 0, null);
-        let currentNodeID = null;
-        let targetNode = this.game.getApplePosition();
+        const targetNode = this.game.getApplePosition();
 
-        let exploredNodes = new Set<number>();
-        let priorityQueue = new HeapQueue<AStarNode>();
-        priorityQueue.setStrategy('max');
+        const exploredNodes = new Set<number>();
+        const priorityQueue = new HeapQueue<AStarNode>();
+        priorityQueue.setStrategy('min');
         priorityQueue.insert(currentNode, currentNode.getPriority());
-        let neighbours: Position[];
-        let neighbour: Position;
 
-        return new Promise(async (resolve, rejet) => {
-            while (!priorityQueue.isEmpty()) {
-                currentNode = priorityQueue.pop();
-                if (currentNode.getPosition().equals(targetNode)) {
-                    let result = this.reconstructPath(currentNode);
-                    moves = result.map(e => e.direction);
-                    if (this.visualize) {
-                        for (let e of result) {
-                            //Visualize changed
-                            if (!this.visualize) {
-                                this.game.getBoard().current.clearVisualization();
-                                break;
-                            }
-                            await new Promise<void>((resolve) => setTimeout(() => {
-                                if (!this.game.getApplePosition().equals(e.nextPosition) && this.visualize) {
-                                    resolve(this.game.setSinglePosition(e.nextPosition, ["path"]))
-                                }else{
-                                    resolve();
-                                }
-                            }, this.visualizationSpeed*10));
-                        }
-                        //Wait for visualization to end
-                        await new Promise<void>((resolve) => setTimeout(() => {
-                            resolve();
-                        }, this.visualizationSpeed*100));
-                        break;
-                    }
-                }
-                currentNodeID = this.getPositionID(currentNode.getPosition());
-                if (exploredNodes.has(currentNodeID)) {
-                    continue;
-                }
-                exploredNodes.add(currentNodeID);
+        while (!priorityQueue.isEmpty()) {
+            currentNode = priorityQueue.pop();
+            if (currentNode.getPosition().equals(targetNode)) {
+                const result = this.reconstructPath(currentNode);
+                moves = result.map(e => e.direction);
                 if (this.visualize) {
-                    await new Promise((resolve) => setTimeout(() => {
-                        if (this.visualize) {
-                            //resolve(this.game.setSinglePosition(currentNode.getPosition(), ["explored"]))
-                            resolve(1)
-                        }else{
-                            this.game.getBoard().current.clearVisualization();
+                    for (const e of result) {
+                        if (!this.visualize) {
+                            if (this.game.getBoard() && this.game.getBoard().current) {
+                                this.game.getBoard().current.clearVisualization();
+                            }
+                            break;
                         }
-                    }, this.visualizationSpeed*0.1));
-
-                }
-                neighbours = this.getNeighbours(currentNode.getPosition())
-                    .filter(neighbour => !exploredNodes.has(this.getPositionID(neighbour)));
-                for (let i = 0; i < neighbours.length; i++) {
-                    neighbour = neighbours[i];
-
-                    let tempNode = AStarNode.createAStarNode(neighbour,
-                        this.getDistance(neighbour, targetNode),
-                        currentNode.getCost() + 1, currentNode);
-                    priorityQueue.insert(tempNode, tempNode.getPriority());
-                    if (this.visualize) {
-                        await new Promise((resolve) => setTimeout(() =>
-                            resolve(this.game.setSinglePosition(tempNode.getPosition(), ["expanded"])), this.visualizationSpeed*0.1));
+                        await new Promise<void>((resolve) => setTimeout(() => {
+                            if (!this.game.getApplePosition().equals(e.nextPosition) && this.visualize) {
+                                this.game.setSinglePosition(e.nextPosition, ["path"]);
+                            }
+                            resolve();
+                        }, this.visualizationSpeed * 10));
                     }
+                    await new Promise<void>((resolve) => setTimeout(resolve, this.visualizationSpeed * 20));
                 }
-
-
+                break;
             }
-            return resolve(moves);
-        });
+
+            const currentNodeID = this.getPositionID(currentNode.getPosition());
+            if (exploredNodes.has(currentNodeID)) {
+                continue;
+            }
+            exploredNodes.add(currentNodeID);
+
+            const neighbours = this.getNeighbours(currentNode.getPosition())
+                .filter(neighbour => !exploredNodes.has(this.getPositionID(neighbour)));
+
+            for (let i = 0; i < neighbours.length; i++) {
+                const neighbour = neighbours[i];
+                const gCost = currentNode.getCost() + 1;
+                const hCost = this.getDistance(neighbour, targetNode);
+                const tempNode = AStarNode.createAStarNode(neighbour, gCost, hCost, currentNode);
+                priorityQueue.insert(tempNode, tempNode.getPriority());
+
+                if (this.visualize) {
+                    await new Promise<void>((resolve) => setTimeout(() => {
+                        if (this.visualize) {
+                            this.game.setSinglePosition(tempNode.getPosition(), ["expanded"]);
+                        }
+                        resolve();
+                    }, this.visualizationSpeed * 0.1));
+                }
+            }
+        }
+        return moves;
     }
+
     getDistance(neighbour: Position, targetNode: Position): number {
         return Math.abs(neighbour.getRow() - targetNode.getRow()) +
             Math.abs(neighbour.getColumn() - targetNode.getColumn());
@@ -159,8 +152,7 @@ class AStarPlayer implements Player {
                 direction: GameUtils.getDirection(currentNode.getParentNode().getPosition(),
                     currentNode.getPosition()),
                 nextPosition: currentNode.getParentNode().getPosition()
-            })
-
+            });
             currentNode = currentNode.getParentNode();
         }
         return directions;

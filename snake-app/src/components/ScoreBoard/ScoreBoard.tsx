@@ -2,119 +2,140 @@ import React from 'react'
 import Algorithm from '../../game/game-utils/Algorithm';
 import './ScoreBoard.css'
 
-class ScoreBoard extends React.Component<{},
-    {
-        firstScore: { id: number, algorithm: string, score: number, stepCount, avgSteps: number }
-        scoreList: { id: number, algorithm: string, score: number, stepCount, avgSteps: number }[]
-    }> {
-    clearScoreBoard() {
-        this.setState(prevState=>{
-            return {
-                firstScore: {
-                    id: 0,
-                    algorithm: prevState.firstScore.algorithm.toString(),
-                    score: prevState.firstScore.score,
-                    stepCount: prevState.firstScore.stepCount,
-                    avgSteps: Math.round(((prevState.firstScore.stepCount / (prevState.firstScore.score+1)) + Number.EPSILON) * 100) / 100
-                },
-                scoreList: []
-            }
-        })
-    }
+export interface ScoreItem {
+    id: number;
+    algorithm: string;
+    score: number;
+    stepCount: number;
+    avgSteps: number;
+}
 
-    private id: number = 0;
-    constructor(props: { algorithm: Algorithm }) {
+interface ScoreBoardProps {
+    algorithm?: Algorithm;
+}
+
+interface ScoreBoardState {
+    firstScore: ScoreItem;
+    scoreList: ScoreItem[];
+}
+
+class ScoreBoard extends React.Component<ScoreBoardProps, ScoreBoardState> {
+    constructor(props: ScoreBoardProps) {
         super(props);
-        this.state = this.getInitialState(props.algorithm);
-
+        this.state = this.getInitialState(props.algorithm || Algorithm.HUMAN);
     }
 
-    getInitialState(algorithm: Algorithm) {
+    getInitialState(algorithm: Algorithm): ScoreBoardState {
+        let algName = "Human";
+        if (algorithm === Algorithm.ASTAR) algName = "A*";
+        if (algorithm === Algorithm.HAMILTONIANCYCLE) algName = "Hamiltonian";
+
         return {
-            firstScore:
-            {
+            firstScore: {
                 id: 0,
-                algorithm: algorithm.toString(),
+                algorithm: algName,
                 score: 0,
                 stepCount: 0,
                 avgSteps: -1
             },
             scoreList: []
-        }
-
+        };
     }
-    getNewState(increase: number = 0) {
+
+    clearScoreBoard() {
+        this.setState(prevState => {
+            return {
+                firstScore: {
+                    id: 0,
+                    algorithm: prevState.firstScore.algorithm,
+                    score: 0,
+                    stepCount: 0,
+                    avgSteps: -1
+                },
+                scoreList: []
+            };
+        });
+    }
+
+    getNewState(increase: number = 0): ScoreBoardState {
         return {
-            firstScore:
-            {
+            firstScore: {
                 id: this.state.firstScore.id + increase,
-                algorithm: this.state.firstScore.algorithm.toString(),
+                algorithm: this.state.firstScore.algorithm,
                 score: 0,
                 stepCount: 0,
                 avgSteps: -1
             },
             scoreList: this.state.scoreList
-        }
+        };
     }
+
+    getCurrentStats(): ScoreItem {
+        return this.state.firstScore;
+    }
+
     setAlgorithm(algorithm: Algorithm) {
-        let newState = null;
+        let algName = "Human";
         switch (algorithm) {
             case Algorithm.HUMAN:
-                newState = this.getNewState();
-                newState.algorithm = "Human";
-                this.setState(newState);
+                algName = "Human";
                 break;
             case Algorithm.HAMILTONIANCYCLE:
-                newState = this.getNewState();
-                newState.algorithm = "Hamiltonian";
-                this.setState(newState);
+                algName = "Hamiltonian";
                 break;
             default:
-                newState = this.getNewState();
-                newState.algorithm = "A*";
-                this.setState(newState);
+                algName = "A*";
                 break;
         }
+        this.setState(prevState => ({
+            firstScore: {
+                ...prevState.firstScore,
+                algorithm: algName,
+                score: 0,
+                stepCount: 0,
+                avgSteps: -1
+            }
+        }));
     }
 
     increaseScore() {
         this.setState(prevState => {
+            const nextScore = prevState.firstScore.score + 1;
+            const avg = Math.round(((prevState.firstScore.stepCount / nextScore) + Number.EPSILON) * 100) / 100;
             return {
                 firstScore: {
-                    id: prevState.firstScore.id,
-                    algorithm: prevState.firstScore.algorithm.toString(),
-                    score: prevState.firstScore.score + 1,
-                    stepCount: prevState.firstScore.stepCount,
-                    avgSteps: Math.round(((prevState.firstScore.stepCount / (prevState.firstScore.score+1)) + Number.EPSILON) * 100) / 100
+                    ...prevState.firstScore,
+                    score: nextScore,
+                    avgSteps: avg
                 },
                 scoreList: prevState.scoreList
             };
-        })
+        });
     }
 
     increaseSteps() {
         this.setState(prevState => {
+            const nextSteps = prevState.firstScore.stepCount + 1;
+            const denom = prevState.firstScore.score > 0 ? prevState.firstScore.score : 1;
+            const avg = Math.round(((nextSteps / denom) + Number.EPSILON) * 100) / 100;
             return {
                 firstScore: {
-                    id: prevState.firstScore.id,
-                    algorithm: prevState.firstScore.algorithm.toString(),
-                    score: prevState.firstScore.score ,
-                    stepCount: prevState.firstScore.stepCount+ 1,
-                    avgSteps: prevState.firstScore.avgSteps
+                    ...prevState.firstScore,
+                    stepCount: nextSteps,
+                    avgSteps: avg
                 },
                 scoreList: prevState.scoreList
             };
-        })
+        });
     }
 
     saveGame() {
         this.setState(prevState => {
             return {
                 firstScore: this.getNewState(1).firstScore,
-                scoreList: [prevState.firstScore].concat(prevState.scoreList)
+                scoreList: [prevState.firstScore, ...prevState.scoreList]
             };
         });
-
     }
 
     render() {
@@ -123,11 +144,11 @@ class ScoreBoard extends React.Component<{},
                 <table className="score-board-summary-table">
                     <thead>
                         <tr>
-                            <td>GAME ID</td>
-                            <td>ALGORITHM</td>
-                            <td>SCORE</td>
-                            <td>STEPS</td>
-                            <td>AVG STEPS</td>
+                            <th>GAME ID</th>
+                            <th>ALGORITHM</th>
+                            <th>SCORE</th>
+                            <th>STEPS</th>
+                            <th>AVG STEPS</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -136,25 +157,23 @@ class ScoreBoard extends React.Component<{},
                             <td>{this.state.firstScore.algorithm}</td>
                             <td>{this.state.firstScore.score}</td>
                             <td>{this.state.firstScore.stepCount}</td>
-                            <td>{this.state.firstScore.avgSteps}</td>
+                            <td>{this.state.firstScore.avgSteps >= 0 ? this.state.firstScore.avgSteps : '-'}</td>
                         </tr>
-                        {this.state.scoreList.map(row => {
-                            return (<tr>
+                        {this.state.scoreList.map((row) => (
+                            <tr key={row.id}>
                                 <td>{`#${row.id}`}</td>
                                 <td>{row.algorithm}</td>
                                 <td>{row.score}</td>
                                 <td>{row.stepCount}</td>
-                                <td>{row.avgSteps}</td>
+                                <td>{row.avgSteps >= 0 ? row.avgSteps : '-'}</td>
                             </tr>
-                            );
-                        })}
+                        ))}
                     </tbody>
                 </table>
             </div>
-        )
-
+        );
     }
-
 }
+
 export default ScoreBoard;
 
