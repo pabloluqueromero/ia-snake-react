@@ -72,22 +72,15 @@ class DQNPlayer implements Player {
             return Direction.UP;
         }
 
-        // Determine current effective direction
         const lastMove = this.game.getLastMovement();
         if (lastMove !== null && lastMove !== undefined) {
             this.currentHeading = lastMove;
         }
 
-        // Extract 12-D state vector
         const state = this.extractState();
-
-        // Forward inference
         const { action, qValues, isExploring } = this.inference.selectAction(state, this.epsilon);
-
-        // Convert relative action (0: Straight, 1: Turn Right, 2: Turn Left) to absolute Direction
         const nextDirection = this.convertActionToDirection(this.currentHeading, action);
 
-        // Telemetry payload for live HUD
         if (this.telemetryListener) {
             const telemetry: DQNTelemetry = {
                 qValues: [qValues[0] || 0, qValues[1] || 0, qValues[2] || 0],
@@ -95,18 +88,17 @@ class DQNPlayer implements Player {
                 dangers: [state[0] > 0.5, state[1] > 0.5, state[2] > 0.5],
                 currentDirection: nextDirection,
                 foodRelative: {
-                    up: state[7] > 0.5,
-                    right: state[8] > 0.5,
-                    down: state[9] > 0.5,
-                    left: state[10] > 0.5
+                    up: state[10] > 0.5,
+                    right: state[11] > 0.5,
+                    down: state[12] > 0.5,
+                    left: state[13] > 0.5
                 },
-                distanceToFood: Math.round(state[11] * (this.game.getDimensions()[0] + this.game.getDimensions()[1])),
+                distanceToFood: Math.round(state[14] * (this.game.getDimensions()[0] + this.game.getDimensions()[1])),
                 isExploring
             };
             this.telemetryListener(telemetry);
         }
 
-        // Optional visualization: highlight next predicted head position
         if (this.visualize && this.game.getBoard() && this.game.getBoard().current) {
             const nextHead = GameUtils.applyDirection(this.game.getHeadSnakePosition(), nextDirection);
             if (GameUtils.isValidPosition(nextHead, this.game.getDimensions(), this.game.getSnake())) {
@@ -121,15 +113,17 @@ class DQNPlayer implements Player {
     }
 
     /**
-     * Extracts 12 normalized spatial features:
-     * [danger_straight, danger_right, danger_left,
-     *  dir_up, dir_right, dir_down, dir_left,
-     *  food_up, food_right, food_down, food_left,
-     *  dist_norm]
+     * Extracts 16 normalized spatial features:
+     * 0..2: Immediate danger (Straight, Right, Left)
+     * 3..5: 2-step danger (Straight 2, Right 2, Left 2)
+     * 6..9: Heading one-hot (UP, RIGHT, DOWN, LEFT)
+     * 10..13: Food relative direction (UP, RIGHT, DOWN, LEFT)
+     * 14: Distance to food normalized
+     * 15: Free space ratio ahead
      */
     private extractState(): number[] {
         if (!this.game) {
-            return new Array(12).fill(0);
+            return new Array(16).fill(0);
         }
 
         const head = this.game.getHeadSnakePosition();
@@ -146,9 +140,17 @@ class DQNPlayer implements Player {
         const ptRight = GameUtils.applyDirection(head, dirRight);
         const ptLeft = GameUtils.applyDirection(head, dirLeft);
 
+        const ptStraight2 = GameUtils.applyDirection(ptStraight, dirStraight);
+        const ptRight2 = GameUtils.applyDirection(ptRight, dirRight);
+        const ptLeft2 = GameUtils.applyDirection(ptLeft, dirLeft);
+
         const dangerStraight = !GameUtils.isValidPosition(ptStraight, dimensions, snake) ? 1.0 : 0.0;
         const dangerRight = !GameUtils.isValidPosition(ptRight, dimensions, snake) ? 1.0 : 0.0;
         const dangerLeft = !GameUtils.isValidPosition(ptLeft, dimensions, snake) ? 1.0 : 0.0;
+
+        const dangerStraight2 = dangerStraight === 1.0 || !GameUtils.isValidPosition(ptStraight2, dimensions, snake) ? 1.0 : 0.0;
+        const dangerRight2 = dangerRight === 1.0 || !GameUtils.isValidPosition(ptRight2, dimensions, snake) ? 1.0 : 0.0;
+        const dangerLeft2 = dangerLeft === 1.0 || !GameUtils.isValidPosition(ptLeft2, dimensions, snake) ? 1.0 : 0.0;
 
         const dirUp = this.currentHeading === Direction.UP ? 1.0 : 0.0;
         const dirRightOneHot = this.currentHeading === Direction.RIGHT ? 1.0 : 0.0;
@@ -162,11 +164,25 @@ class DQNPlayer implements Player {
 
         const manhattanDist = (Math.abs(apple.getRow() - head.getRow()) + Math.abs(apple.getColumn() - head.getColumn())) / (dimensions[0] + dimensions[1]);
 
+        // Simple lookahead free space count
+        let freeSpaceCount = 0;
+        if (dangerStraight === 0.0) {
+            for (const d of DQNPlayer.CLOCKWISE) {
+                const p = GameUtils.applyDirection(ptStraight, d);
+                if (GameUtils.isValidPosition(p, dimensions, snake)) {
+                    freeSpaceCount += 1;
+                }
+            }
+        }
+        const freeSpaceRatio = freeSpaceCount / 4.0;
+
         return [
             dangerStraight, dangerRight, dangerLeft,
+            dangerStraight2, dangerRight2, dangerLeft2,
             dirUp, dirRightOneHot, dirDown, dirLeftOneHot,
             foodUp, foodRight, foodDown, foodLeft,
-            manhattanDist
+            manhattanDist,
+            freeSpaceRatio
         ];
     }
 
@@ -175,13 +191,10 @@ class DQNPlayer implements Player {
         const currentIdx = idx !== -1 ? idx : 0;
 
         if (action === 1) {
-            // Turn Right
             return DQNPlayer.CLOCKWISE[(currentIdx + 1) % 4];
         } else if (action === 2) {
-            // Turn Left
             return DQNPlayer.CLOCKWISE[(currentIdx - 1 + 4) % 4];
         }
-        // Go Straight
         return DQNPlayer.CLOCKWISE[currentIdx];
     }
 }

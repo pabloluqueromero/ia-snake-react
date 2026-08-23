@@ -8,7 +8,7 @@ export interface ModelWeights {
     framework: string;
     architecture: number[];
     weights: {
-        w1: number[][]; // 12 x 64
+        w1: number[][]; // 16 x 64
         b1: number[];   // 64
         w2: number[][]; // 64 x 64
         b2: number[];   // 64
@@ -38,23 +38,22 @@ export class DQNInference {
     }
 
     /**
-     * Compute Q-values for a 12-dimensional state vector
+     * Compute Q-values for a 16-dimensional state vector
      * Returns [Q_straight, Q_turn_right, Q_turn_left]
      */
     public predict(state: number[]): number[] {
         if (!this.weights) {
-            // Fallback heuristic if weights are not yet loaded
             return [0.5, 0.2, 0.2];
         }
 
         const { w1, b1, w2, b2, w3, b3 } = this.weights;
 
-        // Layer 1: Input (12) -> Hidden (64) + ReLU
+        // Layer 1: Input (16) -> Hidden (64) + ReLU
         const h1 = new Array(b1.length);
         for (let j = 0; j < b1.length; j++) {
             let sum = b1[j];
             for (let i = 0; i < state.length; i++) {
-                sum += state[i] * w1[i][j];
+                sum += (state[i] || 0) * (w1[i] ? w1[i][j] : 0);
             }
             h1[j] = Math.max(0, sum);
         }
@@ -85,7 +84,6 @@ export class DQNInference {
     /**
      * Select best action with danger safety mask
      * Actions: 0 = Straight, 1 = Turn Right, 2 = Turn Left
-     * State features 0, 1, 2 correspond to danger_straight, danger_right, danger_left
      */
     public selectAction(state: number[], explorationRate: number = 0.0): { action: number; qValues: number[]; isExploring: boolean } {
         const qValues = this.predict(state);
@@ -103,7 +101,6 @@ export class DQNInference {
                 chosenAction = Math.floor(Math.random() * 3);
             }
         } else {
-            // Pick highest Q-value, masking out immediate suicide moves if safer alternatives exist
             let bestQ = -Infinity;
             let bestAction = 0;
 

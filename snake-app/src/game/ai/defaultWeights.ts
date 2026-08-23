@@ -2,17 +2,17 @@ import { ModelWeights } from "./DQNInference";
 import trainedWeightsJson from "./dqn_weights.json";
 
 export function generateDefaultWeights(): ModelWeights {
-    if (trainedWeightsJson && trainedWeightsJson.weights) {
+    if (trainedWeightsJson && (trainedWeightsJson as any).weights) {
         return trainedWeightsJson as unknown as ModelWeights;
     }
 
-    const stateDim = 12;
+    const stateDim = 16;
     const h1Dim = 64;
     const h2Dim = 64;
     const actionDim = 3;
 
     return {
-        version: "1.0",
+        version: "2.0",
         framework: "tensorflow-keras",
         architecture: [stateDim, h1Dim, h2Dim, actionDim],
         weights: {
