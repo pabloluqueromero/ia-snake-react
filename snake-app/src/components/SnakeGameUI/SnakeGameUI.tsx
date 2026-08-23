@@ -17,10 +17,9 @@ const DEFAULT_SPEED = 500;
 function SnakeGameUI() {
     const [isGameOver, setIsGameOver] = useState(false);
     const [isMoving, setIsMoving] = useState(false);
-    const [theme, setTheme] = useState<'light' | 'dark'>('light');
+    const [visualize, setVisualize] = useState<boolean>(true);
     const [currentAlgorithm, setCurrentAlgorithm] = useState<Algorithm>(Algorithm.HUMAN);
     const [dqnTelemetry, setDqnTelemetry] = useState<DQNTelemetry | null>(null);
-    const [visualize, setVisualize] = useState<boolean>(true);
     const [gameOverStats, setGameOverStats] = useState({
         algorithm: 'Human',
         score: 0,
@@ -30,15 +29,6 @@ function SnakeGameUI() {
     const boardRef = useRef<SnakeBoard>(null);
     const scoreBoardRef = useRef<ScoreBoard>(null);
     const snakeGameRef = useRef<SnakeGame | null>(null);
-
-    // Sync theme with document attribute
-    useEffect(() => {
-        document.documentElement.setAttribute('data-theme', theme);
-    }, [theme]);
-
-    const toggleTheme = () => {
-        setTheme(prev => prev === 'light' ? 'dark' : 'light');
-    };
 
     const handleGameOver = useCallback((gameOver: boolean, stats?: { algorithm: string, score: number, steps: number, avgSteps: number }) => {
         if (gameOver && stats) {
@@ -109,8 +99,7 @@ function SnakeGameUI() {
         setIsGameOver(false);
         if (snakeGameRef.current) {
             snakeGameRef.current.initializeGame();
-            snakeGameRef.current.resume();
-            setIsMoving(true);
+            snakeGameRef.current.pause();
             if (currentAlgorithm === Algorithm.DQN) {
                 const player = snakeGameRef.current.getPlayer() as DQNPlayer;
                 if (player && typeof player.setTelemetryListener === 'function') {
@@ -120,6 +109,7 @@ function SnakeGameUI() {
                 }
             }
         }
+        setIsMoving(false);
     }, [currentAlgorithm]);
 
     const clearScoreBoard = useCallback(() => {
@@ -194,15 +184,6 @@ function SnakeGameUI() {
                         <span className="status-dot"></span>
                         <span>{isGameOver ? 'Game Over' : isMoving ? 'Running' : 'Ready / Paused'}</span>
                     </div>
-                    <button
-                        type="button"
-                        className="nav-link-btn theme-toggle-btn"
-                        onClick={toggleTheme}
-                        title={`Switch to ${theme === 'light' ? 'Dark' : 'Classic Light'} Theme`}
-                    >
-                        <i className={`fas ${theme === 'light' ? 'fa-moon' : 'fa-sun'}`}></i>
-                        <span>{theme === 'light' ? 'Dark Mode' : 'Classic Theme'}</span>
-                    </button>
                     <Link to="/info" className="nav-link-btn" title="About & Documentation">
                         <i className="fas fa-info-circle"></i>
                         <span>Info</span>
