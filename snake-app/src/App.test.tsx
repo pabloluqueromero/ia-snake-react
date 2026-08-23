@@ -4,16 +4,15 @@ import App from './App';
 
 test('renders snake game title and controls', () => {
   render(<App />);
-  const titleElement = screen.getByText(/Snake Game AI/i);
+  const titleElement = screen.getByRole('heading', { level: 1, name: /Snake AI/i });
   expect(titleElement).toBeInTheDocument();
-  
-  const speedLabel = screen.getByText(/Select Speed/i);
+
+  const speedLabel = screen.getByText(/Game Speed/i);
   expect(speedLabel).toBeInTheDocument();
 
-  const humanOptions = screen.getAllByText(/Human/i);
-  expect(humanOptions.length).toBeGreaterThanOrEqual(1);
+  const humanOption = screen.getByRole('button', { name: /Human/i });
+  expect(humanOption).toBeInTheDocument();
 
-  const instructions = screen.getByText(/Press ENTER to start playing/i);
-  expect(instructions).toBeInTheDocument();
+  const astarOption = screen.getByRole('button', { name: /A\* AI/i });
+  expect(astarOption).toBeInTheDocument();
 });
-

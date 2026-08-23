@@ -1,191 +1,133 @@
+.grid {
+    display: grid;
+    width: min(calc(100vh - 130px), 480px);
+    height: min(calc(100vh - 130px), 480px);
+    aspect-ratio: 1 / 1;
+    background: var(--board-bg);
+    border-radius: 14px;
+    border: 3px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 
+        0 10px 25px -5px rgba(0, 0, 0, 0.3),
+        0 0 15px var(--border-glow),
+        inset 0 0 8px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    padding: 3px;
+    gap: 1px;
+}
+
 .light-cell {
-    background-color: var(--light-light);
+    background-color: var(--board-light);
+    border-radius: 2px;
 }
 
 .dark-cell {
-    background-color: var(--light-dark);
+    background-color: var(--board-dark);
+    border-radius: 2px;
 }
 
-.light-cell:hover {
-    background-color: var(--light-light-hover);
+/* Snake Segments */
+.head,
+.body {
+    position: relative;
+    border-radius: 4px;
+    z-index: 2;
 }
 
-.dark-cell:hover {
-    background-color: var(--light-dark-hover);
-}
-
-.cell:hover {
-    transform: scaleX(1.1) scaleY(1.1);
-    transition: transform 0.1s ease-in-out;
-}
-
-.apple::before {
-    content: "";
-    background-image: url("../../images/apple.png");
-    background-repeat: no-repeat;
-    background-size: 100% 100%;
-    display: block;
-    z-index: 0;
-    width: 100%;
-    height: 100%;
-    animation: appleAnimation 0.7s alternate infinite ease-in;
-}
-
-@keyframes appleAnimation {
-    0% {
-        transform: scale(.9);
-    }
-    100% {
-        transform: scale(1.2);
-    }
-}
-
-.grid {
-    display: grid;
-    height: 90vmin;
-    width: 90vmin;
-    box-shadow: 1px 1px 10px rgb(180, 178, 178);
-}
-
-
-/* 
-.head::after{
-    content:'';
-    display: flex;
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    transform: scaleX(1.2) scaleY(1.2);
-    background-color: var(--snake-light-head) !important;
-
-}
-.body::after{
-    content:'';
-    display: flex;
-    width: 100%;
-    height: 100%;
-    z-index:-1;
-    border-radius: 50%;
-    transform: scaleX(1) scaleY(1);
-    background-color: var(--snake-light) !important;
-    
-} */
-
-.head::after,
 .body::after {
-    box-sizing: border-box;
-    width: 100%;
-    height: 100%;
     content: '';
-    display: flex;
-    justify-content: center;
-    align-content: center;
-    background-color: var(--snake-light) !important;
-    border-radius: 6px;
-    border: 3px solid rgba(0, 0, 0, 0.561);
-}
-
-.body::after {
-    transform: scale(0.9, 0.9) !important;
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 4px;
+    background: var(--snake-body);
+    box-shadow: 0 0 4px var(--snake-glow);
+    transform: scale(0.92);
 }
 
 .head::after {
-    background-color: rgb(20, 207, 240) !important;
-    transform: scale(1.3, 1.3) !important;
-    transform: scale(1, 1) !important;
-    border: 3px solid rgba(0, 0, 0, 0.561);
-}
-
-
-/* 
-.score {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    gap: 6vh;
-    background-color: rgba(46, 45, 45, 0.185);
-    padding: 2vh;
-}
-
-.score-board-element {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    color: white;
-} */
-
-.expanded::after,
-.explored::after,
-.path::after {
+    content: '';
+    display: block;
     width: 100%;
     height: 100%;
+    border-radius: 5px;
+    background: var(--snake-head);
+    box-shadow: 0 0 8px var(--snake-glow);
+    transform: scale(1.02);
+}
+
+/* Classic Apple with Smooth Glow */
+.apple {
+    position: relative;
+    z-index: 3;
+}
+
+.apple::after {
+    content: "";
+    background-image: url("../../images/apple.png");
+    background-repeat: no-repeat;
+    background-size: 85% 85%;
+    background-position: center;
+    display: block;
+    width: 100%;
+    height: 100%;
+    animation: appleBounce 0.8s ease-in-out infinite alternate;
+}
+
+@keyframes appleBounce {
+    0% {
+        transform: scale(0.88);
+        filter: drop-shadow(0 2px 3px rgba(225, 29, 72, 0.4));
+    }
+    100% {
+        transform: scale(1.12);
+        filter: drop-shadow(0 3px 8px rgba(225, 29, 72, 0.7));
+    }
+}
+
+/* AI Pathfinding Search Visualizations */
+.path::after,
+.explored::after,
+.expanded::after {
     content: '';
-    display: flex;
-    justify-content: center;
-    align-content: center;
+    display: block;
+    width: 100%;
+    height: 100%;
 }
 
 .path::after {
-    background-color: rgb(255, 255, 255);
-    transform: scale(0.6, 0.6);
-    animation: pathanimation 0.5s ease-in;
+    background: radial-gradient(circle, #38bdf8 0%, rgba(56, 189, 248, 0.3) 70%, transparent 100%);
+    border-radius: 50%;
+    transform: scale(0.65);
+    box-shadow: 0 0 6px #38bdf8;
+    animation: pathPulse 0.4s ease-out;
+}
+
+@keyframes pathPulse {
+    0% { transform: scale(0.2); opacity: 0.2; }
+    50% { transform: scale(0.85); opacity: 1; }
+    100% { transform: scale(0.65); opacity: 0.9; }
 }
 
 .explored::after {
-    animation: exploredanimation 0.6s ease-in;
-    transform: scale(0.7, 0.7);
-    background-color: rgb(255, 238, 0);
+    background: rgba(234, 179, 8, 0.45);
+    border-radius: 2px;
+    transform: scale(0.85);
+    animation: exploreFade 0.5s ease-out;
 }
 
-@keyframes exploredanimation {
-    0% {
-        border-radius: 50%;
-        transform: scale(0.8, 0.8);
-    }
-    60% {
-        border-radius: 25%;
-        transform: scale(0.5, 0.5);
-    }
-    100% {
-        border-radius: 0%;
-        background-color: rgba(241, 228, 39, 0.829);
-        transform: scale(0.7, 0.7);
-    }
-}
-
-@keyframes expandedanimation {
-    0% {
-        border-radius: 50%;
-        transform: scale(0, 0);
-        background-color: rgba(114, 102, 218, 0.794);
-    }
-    60% {
-        border-radius: 25%;
-        transform: scale(0.9, 0.9);
-    }
-    100% {
-        border-radius: 0%;
-        transform: scale(0.7, 0.7);
-        background-color: rgba(172, 73, 175, 0.794);
-    }
-}
-
-@keyframes pathanimation {
-    0% {
-        transform: scale(0, 0);
-    }
-    60% {
-        transform: scale(1.1, 1.1);
-    }
-    100% {
-        transform: scale(0.6, 0.6);
-    }
+@keyframes exploreFade {
+    0% { transform: scale(0.3); opacity: 0.8; }
+    100% { transform: scale(0.85); opacity: 0.5; }
 }
 
 .expanded::after {
-    background-color: rgba(172, 73, 175, 0.794);
-    transform: scale(0.7, 0.7);
-    animation: expandedanimation 1s ease-in;
+    background: rgba(168, 85, 247, 0.45);
+    border-radius: 2px;
+    transform: scale(0.85);
+    animation: expandRipple 0.6s ease-out;
+}
+
+@keyframes expandRipple {
+    0% { transform: scale(0.2); background: rgba(236, 72, 153, 0.7); }
+    100% { transform: scale(0.85); background: rgba(168, 85, 247, 0.45); }
 }

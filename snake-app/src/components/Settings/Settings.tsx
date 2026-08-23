@@ -1,59 +1,101 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './Settings.css';
 import Algorithm from '../../game/game-utils/Algorithm';
-function Settings(props: { setAlgorithm: (algorithm:Algorithm) => void,
-                           setSpeed: (speed:number) => void,
-                           changeVisualize: () => void}) {
-  return (
-    <div style={{
-      flex: '1',
-      width: '100%',
-      padding: '10px 20px',
-      display: 'flex',
-      justifyContent: 'space-evenly',
-      backgroundColor: 'rgba(255,255,255,0.50)',
-      position:'relative'
-    }}>
 
-      <div className="select-algorithm ">
-        <h3>Select Speed</h3>
-        <input type="range" min="1" max="1000" defaultValue="500" onChange={(e)=>props.setSpeed(1000-e.currentTarget.valueAsNumber)}></input>
-      </div>
-      <div className="select-algorithm ">
-        <h3>Visualize</h3>
-        <input type="checkbox" defaultChecked onChange={(e)=> {props.changeVisualize()}}></input>
-      </div>
-      <div className="select-algorithm">
-        <h3>Algorithm</h3>
-        <label className="setting-algorithm-radio-container" >Human
-          <input type="radio" name="radio" defaultChecked onChange={(e) => { if ('on' === e.currentTarget.value) { props.setAlgorithm(Algorithm.HUMAN) } }} />
-          <span className="checkmark"></span>
-        </label>
-        <label className="setting-algorithm-radio-container">A*
-          <input type="radio" name="radio" onChange={(e) => { if ('on' === e.currentTarget.value) { props.setAlgorithm(Algorithm.ASTAR) } }} />
-          <span className="checkmark"></span>
-        </label>
-        {/* <label className="setting-algorithm-radio-container">Hamiltonian
-          <input type="radio" name="radio" disabled={true} onChange={(e) => { if ('on' === e.currentTarget.value) { props.setAlgorithm(Algorithm.HAMILTONIANCYCLE) } }} />
-          <span className="checkmark"></span>
-        </label>
-        <label className="setting-algorithm-radio-container">Smart Hamiltonian
-          <input type="radio" name="radio" disabled={true} onChange={(e) => { if ('on' === e.currentTarget.value) { props.setAlgorithm(Algorithm.ASTAR) } }} />
-          <span className="checkmark"></span>
-        </label>
-        <label className="setting-algorithm-radio-container" >Neural Net
-          <input type="radio" name="radio" disabled={true} onChange={(e) => { if ('on' === e.currentTarget.value) { props.setAlgorithm(Algorithm.ASTAR) } }} />
-          <span className="checkmark"></span>
-        </label> */}
-
-      </div>
-
-      <div className="instructions">
-        Press ENTER to start playing
-      </div>
-    </div>
-  )
+interface SettingsProps {
+  currentAlgorithm?: Algorithm;
+  setAlgorithm: (algorithm: Algorithm) => void;
+  setSpeed: (speed: number) => void;
+  changeVisualize: () => void;
 }
 
-export default Settings
+function Settings(props: SettingsProps) {
+  const activeAlg = props.currentAlgorithm !== undefined ? props.currentAlgorithm : Algorithm.HUMAN;
+  const [speedVal, setSpeedVal] = useState<number>(500);
+  const [visualize, setVisualize] = useState<boolean>(true);
 
+  const handleAlgChange = (alg: Algorithm) => {
+    props.setAlgorithm(alg);
+  };
+
+  const handleSpeedChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.currentTarget.valueAsNumber;
+    setSpeedVal(val);
+    props.setSpeed(1000 - val);
+  };
+
+  const handleVisualizeToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setVisualize(e.target.checked);
+    props.changeVisualize();
+  };
+
+  const getSpeedLabel = (val: number) => {
+    if (val >= 800) return '⚡ Turbo';
+    if (val >= 600) return '🚀 Fast';
+    if (val >= 400) return '🎯 Normal';
+    return '🐢 Slow';
+  };
+
+  return (
+    <div className="settings-deck">
+      {/* Algorithm Selection Segmented Control */}
+      <div className="control-group">
+        <label className="control-label">Algorithm</label>
+        <div className="segmented-control">
+          <button
+            type="button"
+            className={`segment-btn ${activeAlg === Algorithm.HUMAN ? 'active' : ''}`}
+            onClick={() => handleAlgChange(Algorithm.HUMAN)}
+          >
+            <i className="fas fa-gamepad"></i>
+            <span>Human</span>
+          </button>
+          <button
+            type="button"
+            className={`segment-btn ${activeAlg === Algorithm.ASTAR ? 'active' : ''}`}
+            onClick={() => handleAlgChange(Algorithm.ASTAR)}
+          >
+            <i className="fas fa-brain"></i>
+            <span>A* AI</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Speed Slider */}
+      <div className="control-group">
+        <div className="control-header">
+          <label className="control-label">Game Speed</label>
+          <span className="speed-badge">{getSpeedLabel(speedVal)}</span>
+        </div>
+        <div className="slider-wrapper">
+          <input
+            type="range"
+            min="100"
+            max="950"
+            value={speedVal}
+            className="custom-range"
+            onChange={handleSpeedChange}
+          />
+        </div>
+      </div>
+
+      {/* Visualization Toggle */}
+      <div className="control-group toggle-group">
+        <div className="toggle-info">
+          <span className="control-label">Search Visualization</span>
+          <span className="control-sublabel">Render explored & expanded nodes</span>
+        </div>
+        <label className="toggle-switch">
+          <input
+            type="checkbox"
+            checked={visualize}
+            onChange={handleVisualizeToggle}
+          />
+          <span className="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+  );
+}
+
+export default Settings;

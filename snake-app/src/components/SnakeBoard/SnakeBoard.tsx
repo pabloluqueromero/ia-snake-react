@@ -24,7 +24,7 @@ class SnakeBoard extends React.Component<{}, { score: number, length: number }> 
       this.boardSquares[i] = new Array<React.RefObject<Square>>(this.columns);
       this.boardProps[i] = new Array<{ classNames: [string] }>(this.columns);
       for (let j = 0; j < this.columns; j++) {
-        this.boardProps[i][j] = { classNames: ['light-cell'] };
+        this.boardProps[i][j] = { classNames: [(i + j) % 2 === 0 ? 'light-cell' : 'dark-cell'] };
         this.boardSquares[i][j] = React.createRef<Square>();
       }
     }

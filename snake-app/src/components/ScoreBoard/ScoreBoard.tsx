@@ -1,6 +1,6 @@
-import React from 'react'
+import React from 'react';
 import Algorithm from '../../game/game-utils/Algorithm';
-import './ScoreBoard.css'
+import './ScoreBoard.css';
 
 export interface ScoreItem {
     id: number;
@@ -8,6 +8,7 @@ export interface ScoreItem {
     score: number;
     stepCount: number;
     avgSteps: number;
+    date?: string;
 }
 
 interface ScoreBoardProps {
@@ -19,55 +20,111 @@ interface ScoreBoardState {
     scoreList: ScoreItem[];
 }
 
+const STORAGE_KEY = 'ia_snake_scoreboard_v1';
+
 class ScoreBoard extends React.Component<ScoreBoardProps, ScoreBoardState> {
     constructor(props: ScoreBoardProps) {
         super(props);
-        this.state = this.getInitialState(props.algorithm || Algorithm.HUMAN);
+        this.state = {
+            firstScore: this.getInitialActiveScore(props.algorithm || Algorithm.HUMAN),
+            scoreList: this.loadSavedScores()
+        };
     }
 
-    getInitialState(algorithm: Algorithm): ScoreBoardState {
-        let algName = "Human";
-        if (algorithm === Algorithm.ASTAR) algName = "A*";
-        if (algorithm === Algorithm.HAMILTONIANCYCLE) algName = "Hamiltonian";
+    private loadSavedScores(): ScoreItem[] {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed)) {
+                    return parsed;
+                }
+            }
+        } catch (e) {
+            console.warn('Could not load saved scoreboard history:', e);
+        }
+        return [];
+    }
 
+    private persistScores(list: ScoreItem[]) {
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(list.slice(0, 50)));
+        } catch (e) {
+            console.warn('Could not save scoreboard history:', e);
+        }
+    }
+
+    getAlgorithmName(algorithm?: Algorithm): string {
+        if (algorithm === Algorithm.ASTAR) return "A*";
+        if (algorithm === Algorithm.HAMILTONIANCYCLE) return "Hamiltonian";
+        return "Human";
+    }
+
+    getInitialActiveScore(algorithm: Algorithm): ScoreItem {
+        const nextId = (this.loadSavedScores()[0]?.id || 0) + 1;
         return {
+            id: nextId,
+            algorithm: this.getAlgorithmName(algorithm),
+            score: 0,
+            stepCount: 0,
+            avgSteps: -1
+        };
+    }
+
+    clearScoreBoard() {
+        try {
+            localStorage.removeItem(STORAGE_KEY);
+        } catch (e) {
+            console.warn('Could not clear scoreboard storage:', e);
+        }
+        this.setState(prevState => ({
             firstScore: {
-                id: 0,
-                algorithm: algName,
+                id: 1,
+                algorithm: prevState.firstScore.algorithm,
                 score: 0,
                 stepCount: 0,
                 avgSteps: -1
             },
             scoreList: []
-        };
+        }));
     }
 
-    clearScoreBoard() {
-        this.setState(prevState => {
-            return {
-                firstScore: {
-                    id: 0,
-                    algorithm: prevState.firstScore.algorithm,
-                    score: 0,
-                    stepCount: 0,
-                    avgSteps: -1
-                },
-                scoreList: []
-            };
-        });
-    }
-
-    getNewState(increase: number = 0): ScoreBoardState {
-        return {
+    resetActiveGame(algorithmName: string) {
+        const nextId = (this.state.scoreList[0]?.id || 0) + 1;
+        this.setState({
             firstScore: {
-                id: this.state.firstScore.id + increase,
-                algorithm: this.state.firstScore.algorithm,
+                id: nextId,
+                algorithm: algorithmName,
                 score: 0,
                 stepCount: 0,
                 avgSteps: -1
-            },
-            scoreList: this.state.scoreList
+            }
+        });
+    }
+
+    recordCompletedGame(algorithm: string, score: number, stepCount: number, avgSteps: number) {
+        const finishedItem: ScoreItem = {
+            id: this.state.firstScore.id,
+            algorithm: algorithm || this.state.firstScore.algorithm,
+            score: score,
+            stepCount: stepCount,
+            avgSteps: avgSteps,
+            date: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         };
+
+        const updatedList = [finishedItem, ...this.state.scoreList];
+        this.persistScores(updatedList);
+
+        this.setState({
+            scoreList: updatedList,
+            firstScore: {
+                id: finishedItem.id + 1,
+                algorithm: finishedItem.algorithm,
+                score: 0,
+                stepCount: 0,
+                avgSteps: -1
+            }
+        });
     }
 
     getCurrentStats(): ScoreItem {
@@ -75,25 +132,11 @@ class ScoreBoard extends React.Component<ScoreBoardProps, ScoreBoardState> {
     }
 
     setAlgorithm(algorithm: Algorithm) {
-        let algName = "Human";
-        switch (algorithm) {
-            case Algorithm.HUMAN:
-                algName = "Human";
-                break;
-            case Algorithm.HAMILTONIANCYCLE:
-                algName = "Hamiltonian";
-                break;
-            default:
-                algName = "A*";
-                break;
-        }
+        const algName = this.getAlgorithmName(algorithm);
         this.setState(prevState => ({
             firstScore: {
                 ...prevState.firstScore,
-                algorithm: algName,
-                score: 0,
-                stepCount: 0,
-                avgSteps: -1
+                algorithm: algName
             }
         }));
     }
@@ -101,14 +144,13 @@ class ScoreBoard extends React.Component<ScoreBoardProps, ScoreBoardState> {
     increaseScore() {
         this.setState(prevState => {
             const nextScore = prevState.firstScore.score + 1;
-            const avg = Math.round(((prevState.firstScore.stepCount / nextScore) + Number.EPSILON) * 100) / 100;
+            const avg = Math.round(((prevState.firstScore.stepCount / nextScore) + Number.EPSILON) * 10) / 10;
             return {
                 firstScore: {
                     ...prevState.firstScore,
                     score: nextScore,
                     avgSteps: avg
-                },
-                scoreList: prevState.scoreList
+                }
             };
         });
     }
@@ -117,63 +159,108 @@ class ScoreBoard extends React.Component<ScoreBoardProps, ScoreBoardState> {
         this.setState(prevState => {
             const nextSteps = prevState.firstScore.stepCount + 1;
             const denom = prevState.firstScore.score > 0 ? prevState.firstScore.score : 1;
-            const avg = Math.round(((nextSteps / denom) + Number.EPSILON) * 100) / 100;
+            const avg = Math.round(((nextSteps / denom) + Number.EPSILON) * 10) / 10;
             return {
                 firstScore: {
                     ...prevState.firstScore,
                     stepCount: nextSteps,
                     avgSteps: avg
-                },
-                scoreList: prevState.scoreList
+                }
             };
         });
     }
 
-    saveGame() {
-        this.setState(prevState => {
-            return {
-                firstScore: this.getNewState(1).firstScore,
-                scoreList: [prevState.firstScore, ...prevState.scoreList]
-            };
-        });
+    getBadgeClass(alg: string) {
+        if (alg === 'A*' || alg.includes('A*')) return 'badge-astar';
+        if (alg.includes('Hamiltonian')) return 'badge-hamiltonian';
+        return 'badge-human';
     }
 
     render() {
+        const { firstScore, scoreList } = this.state;
+        const totalGames = scoreList.length;
+        const allScores = [...scoreList.map(s => s.score), firstScore.score];
+        const highScore = Math.max(...allScores, 0);
+
         return (
-            <div className="score-board-summary-table-container">
-                <table className="score-board-summary-table">
-                    <thead>
-                        <tr>
-                            <th>GAME ID</th>
-                            <th>ALGORITHM</th>
-                            <th>SCORE</th>
-                            <th>STEPS</th>
-                            <th>AVG STEPS</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>{`#${this.state.firstScore.id}`}</td>
-                            <td>{this.state.firstScore.algorithm}</td>
-                            <td>{this.state.firstScore.score}</td>
-                            <td>{this.state.firstScore.stepCount}</td>
-                            <td>{this.state.firstScore.avgSteps >= 0 ? this.state.firstScore.avgSteps : '-'}</td>
-                        </tr>
-                        {this.state.scoreList.map((row) => (
-                            <tr key={row.id}>
-                                <td>{`#${row.id}`}</td>
-                                <td>{row.algorithm}</td>
-                                <td>{row.score}</td>
-                                <td>{row.stepCount}</td>
-                                <td>{row.avgSteps >= 0 ? row.avgSteps : '-'}</td>
+            <div className="scoreboard-card">
+                {/* Stats Overview */}
+                <div className="scoreboard-stat-row">
+                    <div className="stat-pill">
+                        <span className="stat-pill-title">Live Score</span>
+                        <span className="stat-pill-value highlight">{firstScore.score}</span>
+                    </div>
+                    <div className="stat-pill">
+                        <span className="stat-pill-title">All-Time High</span>
+                        <span className="stat-pill-value">{highScore}</span>
+                    </div>
+                    <div className="stat-pill">
+                        <span className="stat-pill-title">Games Saved</span>
+                        <span className="stat-pill-value">{totalGames}</span>
+                    </div>
+                </div>
+
+                {/* Scoreboard Table Header with Clear Button */}
+                <div className="scoreboard-header-bar">
+                    <span className="scoreboard-title">History & Memory</span>
+                    {scoreList.length > 0 && (
+                        <button
+                            type="button"
+                            className="clear-history-btn"
+                            onClick={() => this.clearScoreBoard()}
+                            title="Clear saved game history"
+                        >
+                            <i className="fas fa-trash-alt"></i> Clear
+                        </button>
+                    )}
+                </div>
+
+                {/* Scoreboard Table */}
+                <div className="score-table-scroll">
+                    <table className="score-board-summary-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>AGENT</th>
+                                <th>SCORE</th>
+                                <th>STEPS</th>
+                                <th>EFFICIENCY</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {/* Current Active Live Row */}
+                            <tr className="current-game-row">
+                                <td className="font-mono">#{firstScore.id} <span className="live-dot" title="Live Game"></span></td>
+                                <td>
+                                    <span className={`alg-badge ${this.getBadgeClass(firstScore.algorithm)}`}>
+                                        {firstScore.algorithm}
+                                    </span>
+                                </td>
+                                <td className="score-value font-mono">{firstScore.score}</td>
+                                <td className="font-mono">{firstScore.stepCount}</td>
+                                <td className="font-mono text-muted">{firstScore.avgSteps >= 0 ? `${firstScore.avgSteps} st/pt` : '-'}</td>
+                            </tr>
+
+                            {/* Saved Previous Games */}
+                            {scoreList.map((row) => (
+                                <tr key={row.id}>
+                                    <td className="font-mono">#{row.id}</td>
+                                    <td>
+                                        <span className={`alg-badge ${this.getBadgeClass(row.algorithm)}`}>
+                                            {row.algorithm}
+                                        </span>
+                                    </td>
+                                    <td className="score-value font-mono">{row.score}</td>
+                                    <td className="font-mono">{row.stepCount}</td>
+                                    <td className="font-mono text-muted">{row.avgSteps >= 0 ? `${row.avgSteps} st/pt` : '-'}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         );
     }
 }
 
 export default ScoreBoard;
-

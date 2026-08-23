@@ -1,8 +1,6 @@
-
 import Direction from "../controls/Direction";
 import SnakeGame from "../controls/SnakeGame";
 import Player from "./Player";
-
 
 const controlKeys: { [key: string]: Direction } = {
     'ArrowDown': Direction.DOWN,
@@ -42,6 +40,10 @@ class HumanPlayer implements Player {
     init(): void {
         this.destroy();
         this.keydownHandler = (event: KeyboardEvent) => {
+            if (!this.game || this.game.isGameOverActive()) {
+                return;
+            }
+
             const key = event.key;
             if (controlKeys[key] !== undefined) {
                 if ((this.game.getLastMovement() !== controlKeysOpposite[key]) || this.game.getSnakeLength() === 1) {
@@ -52,7 +54,6 @@ class HumanPlayer implements Player {
                 }
             } else if (key === 'p' || key === 'P') {
                 if (this.game.isSnakeMoving()) {
-                    console.log("pausing");
                     this.game.pause();
                     return;
                 }

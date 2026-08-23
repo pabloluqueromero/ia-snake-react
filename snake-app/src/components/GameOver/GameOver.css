@@ -1,71 +1,182 @@
-.game-over-container {
-    width: 60vw;
-    height: 80vh;
-    background: rgba(255, 255, 255, 0.527);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    box-shadow: 10px 10px 20px rgba(0, 0, 0, 0.7);
-    animation-name: fadein;
-    animation-duration: 2s;
-}
-
-.game-over-title {
-    box-shadow: 0px 4px 5px rgba(0, 0, 0, 0.698);
-    color: white;
-    flex: 2;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    background: rgb(179, 42, 35);
-}
-
-.game-over-title p {
-    font-size: 3em;
-    font-family: 'Black Ops One', cursive;
-    line-height: 5px;
-    text-align: center;
-    text-shadow: 5px 5px #000000;
-}
-
-.game-over-infos-container {
-    color: black;
-    flex: 4;
-    display: flex;
-    width: 100%;
-    justify-content: space-evenly;
-    align-items: center;
-}
-
-.game-over-options {
-    width: 100%;
-    color: black;
-    font-size: 1.3em;
-    flex: 2;
-    display: flex;
-    justify-content: space-evenly;
-    align-items: center;
-}
-
-.game-over-modal {
-    display: flex;
-    justify-content: center;
-    align-items: center;
+.game-over-modal-backdrop {
     position: fixed;
     inset: 0;
-    background-color: rgba(0, 0, 0, 0.671);
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    animation: modalFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@keyframes fadein {
-    from {
-        opacity: 0;
-        transform: scaleX(0.01) scaleY(0.01);
-    }
-    to {
-        opacity: 100;
-        transform: scaleX(1) scaleY(1);
-    }
+.game-over-dialog {
+    width: min(90vw, 400px);
+    background: var(--bg-glass-card);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border-glass);
+    border-radius: 16px;
+    box-shadow: 
+        0 20px 40px -10px rgba(0, 0, 0, 0.5),
+        0 0 30px rgba(220, 38, 38, 0.2);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    animation: modalScaleUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.game-over-banner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 18px 16px 12px;
+    background: linear-gradient(180deg, rgba(220, 38, 38, 0.12) 0%, transparent 100%);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="dark"] .game-over-banner {
+    border-bottom-color: rgba(255, 255, 255, 0.05);
+}
+
+.game-over-tag {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent-red);
+    margin-bottom: 2px;
+}
+
+.game-over-banner h2 {
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.game-over-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    padding: 16px;
+}
+
+.game-over-stat-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 10px 6px;
+    background: rgba(0, 0, 0, 0.06);
+    border-radius: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="dark"] .game-over-stat-card {
+    background: rgba(0, 0, 0, 0.35);
+    border-color: rgba(255, 255, 255, 0.05);
+}
+
+.game-over-stat-card.highlight {
+    background: rgba(59, 110, 45, 0.12);
+    border-color: rgba(59, 110, 45, 0.25);
+}
+
+[data-theme="dark"] .game-over-stat-card.highlight {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: rgba(16, 185, 129, 0.3);
+}
+
+.stat-card-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+}
+
+.stat-card-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.game-over-stat-card.highlight .stat-card-value {
+    color: var(--accent-primary);
+    font-size: 1.35rem;
+}
+
+[data-theme="dark"] .game-over-stat-card.highlight .stat-card-value {
+    color: var(--accent-primary-light);
+}
+
+.badge-val {
+    font-size: 0.85rem;
+    color: var(--accent-cyan);
+}
+
+.sub-unit {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    font-weight: normal;
+}
+
+.game-over-action-row {
+    display: flex;
+    gap: 10px;
+    padding: 0 16px 18px;
+}
+
+.modal-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 0.88rem;
+    transition: all 0.2s ease;
+}
+
+.btn-secondary {
+    background: rgba(0, 0, 0, 0.08);
+    color: var(--text-primary);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="dark"] .btn-secondary {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-secondary);
+    border-color: var(--border-glass);
+}
+
+.btn-secondary:hover {
+    background: rgba(0, 0, 0, 0.15);
+    color: var(--text-primary);
+}
+
+.btn-primary {
+    background: var(--accent-primary);
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    background: var(--accent-primary-hover);
+}
+
+@keyframes modalFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes modalScaleUp {
+    from { transform: scale(0.9) translateY(20px); opacity: 0; }
+    to { transform: scale(1) translateY(0); opacity: 1; }
 }

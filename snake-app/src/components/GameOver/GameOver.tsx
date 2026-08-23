@@ -1,7 +1,5 @@
 import React from 'react';
 import './GameOver.css';
-import GameOverInfo from './GameOverInfo';
-import GameOverInfos from './GameOverInfos';
 
 interface GameOverProps {
     show: boolean;
@@ -17,30 +15,52 @@ function GameOver(props: GameOverProps) {
         return null;
     }
     const algorithm = props.algorithm || 'Human';
-    const score = props.score !== undefined ? `${props.score}` : '0';
+    const score = props.score !== undefined ? props.score : 0;
     const avgSteps = props.avgSteps !== undefined && props.avgSteps >= 0 ? `${props.avgSteps}` : '-';
 
     return (
-        <div className="game-over-modal">
-            <div className="game-over-container">
-                <div className="game-over-title">
-                    <p>GAME OVER</p>
+        <div className="game-over-modal-backdrop" onClick={props.restartGameCallback}>
+            <div className="game-over-dialog" onClick={(e) => e.stopPropagation()}>
+                <div className="game-over-banner">
+                    <span className="game-over-tag">Session Finished</span>
+                    <h2>Game Over</h2>
                 </div>
-                <GameOverInfos>
-                    <GameOverInfo title={'Algorithm'} content={algorithm} />
-                    <GameOverInfo title={'Score'} content={score} />
-                    <GameOverInfo title={'Avg Steps'} content={avgSteps} />
-                </GameOverInfos>
-                <div style={{
-                    height: '1px',
-                    width: '80%',
-                    marginTop: '2vh',
-                    backgroundColor: 'rgb(51, 51, 51)'
-                }}></div>
-                <div className="game-over-options">
-                    <button className="reset table game-over-button" title="Reset Scoreboard" onClick={() => { props.clearScoreBoard(); }}><i className="fas fa-undo-alt"></i></button>
-                    <button className="resume game-over-button" title="Play Again" onClick={() => { props.restartGameCallback(); }}><i className="fas fa-2x fa-play-circle"></i></button>
-                    <button className="reset home game-over-button" title="Restart" onClick={() => { props.restartGameCallback(); }}><i className="fas fa-home"></i></button>
+
+                <div className="game-over-stat-grid">
+                    <div className="game-over-stat-card">
+                        <span className="stat-card-label">Controller</span>
+                        <span className="stat-card-value badge-val">{algorithm}</span>
+                    </div>
+                    <div className="game-over-stat-card highlight">
+                        <span className="stat-card-label">Final Score</span>
+                        <span className="stat-card-value font-mono">{score}</span>
+                    </div>
+                    <div className="game-over-stat-card">
+                        <span className="stat-card-label">Efficiency</span>
+                        <span className="stat-card-value font-mono">{avgSteps} <span className="sub-unit">st/pt</span></span>
+                    </div>
+                </div>
+
+                <div className="game-over-action-row">
+                    <button
+                        type="button"
+                        className="modal-btn btn-secondary"
+                        title="Clear Scoreboard"
+                        onClick={props.clearScoreBoard}
+                    >
+                        <i className="fas fa-trash-alt"></i>
+                        <span>Reset Table</span>
+                    </button>
+                    <button
+                        type="button"
+                        className="modal-btn btn-primary"
+                        title="Play Again (or press Enter/Space)"
+                        onClick={props.restartGameCallback}
+                        autoFocus
+                    >
+                        <i className="fas fa-redo-alt"></i>
+                        <span>Play Again</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -48,4 +68,3 @@ function GameOver(props: GameOverProps) {
 }
 
 export default GameOver;
-

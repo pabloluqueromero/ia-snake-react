@@ -22,3 +22,5 @@ snake-app/.env.production.local
 snake-app/npm-debug.log*
 snake-app/yarn-debug.log*
 snake-app/yarn-error.log*
+.worktrees/
+
