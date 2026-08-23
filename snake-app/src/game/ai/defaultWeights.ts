@@ -6,13 +6,13 @@ export function generateDefaultWeights(): ModelWeights {
         return trainedWeightsJson as unknown as ModelWeights;
     }
 
-    const stateDim = 16;
+    const stateDim = 12;
     const h1Dim = 64;
     const h2Dim = 64;
     const actionDim = 3;
 
     return {
-        version: "2.0",
+        version: "3.0",
         framework: "tensorflow-keras",
         architecture: [stateDim, h1Dim, h2Dim, actionDim],
         weights: {

@@ -8,7 +8,7 @@ export interface ModelWeights {
     framework: string;
     architecture: number[];
     weights: {
-        w1: number[][]; // 16 x 64
+        w1: number[][]; // 12 x 64
         b1: number[];   // 64
         w2: number[][]; // 64 x 64
         b2: number[];   // 64
@@ -38,7 +38,7 @@ export class DQNInference {
     }
 
     /**
-     * Compute Q-values for a 16-dimensional state vector
+     * Compute Q-values for a 12-dimensional state vector
      * Returns [Q_straight, Q_turn_right, Q_turn_left]
      */
     public predict(state: number[]): number[] {
@@ -48,7 +48,7 @@ export class DQNInference {
 
         const { w1, b1, w2, b2, w3, b3 } = this.weights;
 
-        // Layer 1: Input (16) -> Hidden (64) + ReLU
+        // Layer 1: Input (12) -> Hidden (64) + ReLU
         const h1 = new Array(b1.length);
         for (let j = 0; j < b1.length; j++) {
             let sum = b1[j];
