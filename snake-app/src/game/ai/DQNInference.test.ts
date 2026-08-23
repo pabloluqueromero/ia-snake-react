@@ -10,7 +10,7 @@ describe('DQN Neural Network & Inference', () => {
 
         expect(inference.isReady()).toBe(true);
 
-        const state = [0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0.5, 1.0];
+        const state = [0, 0, 0, 0.5, 0.5, 0.5, 1, 0, 0, 0, 1, 0, 0.3, 0.5, 0.05, 1.0];
         const qValues = inference.predict(state);
 
         expect(qValues.length).toBe(3);
@@ -24,8 +24,7 @@ describe('DQN Neural Network & Inference', () => {
         const weights = generateDefaultWeights();
         const inference = new DQNInference(weights);
 
-        // State with danger straight (1.0), danger right (0.0), danger left (1.0)
-        const stateWithDanger = [1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1, 1, 0, 0, 0.2, 0.5];
+        const stateWithDanger = [1.0, 0.0, 1.0, 0.0, 0.8, 0.0, 1, 0, 0, 0, 1, 0, 0.3, 0.5, 0.05, 0.5];
         const result = inference.selectAction(stateWithDanger, 0.0);
 
         expect(result.action).toBe(1);

@@ -1,6 +1,7 @@
 import Direction from "../controls/Direction";
 import SnakeGame from "../controls/SnakeGame";
 import { GameUtils } from "../game-utils/GameUtils";
+import Position from "../game-utils/Position";
 import { DQNInference, ModelWeights } from "../ai/DQNInference";
 import Player from "./Player";
 
@@ -83,7 +84,7 @@ class DQNPlayer implements Player {
             this.currentHeading = lastMove;
         }
 
-        const state = this.extractRelativeState();
+        const state = this.extractBodyAwareState();
         const { action, qValues, isExploring } = this.inference.selectAction(state, this.epsilon);
         const nextDirection = this.convertActionToDirection(this.currentHeading, action);
 
@@ -96,10 +97,10 @@ class DQNPlayer implements Player {
                 foodRelative: {
                     up: state[6] > 0.5,
                     right: state[7] > 0.5,
-                    down: state[9] > 0.5,
+                    down: false,
                     left: state[8] > 0.5
                 },
-                distanceToFood: Math.round(state[10] * (this.game.getDimensions()[0] + this.game.getDimensions()[1])),
+                distanceToFood: Math.round(state[12] * (this.game.getDimensions()[0] + this.game.getDimensions()[1])),
                 isExploring
             };
             this.telemetryListener(telemetry);
@@ -119,29 +120,26 @@ class DQNPlayer implements Player {
     }
 
     /**
-     * Extracts 12 relative spatial features matching trained neural policy:
-     * 0: danger_straight
-     * 1: danger_right
-     * 2: danger_left
-     * 3: danger2_straight
-     * 4: danger2_right
-     * 5: danger2_left
-     * 6: food_is_straight
-     * 7: food_is_right
-     * 8: food_is_left
-     * 9: food_is_back
-     * 10: normalized Manhattan distance
-     * 11: open neighbor ratio ahead
+     * Extracts 16 body-aware and tail-tracking spatial features:
+     * 0..2: 1-step Danger (Straight, Right, Left)
+     * 3..5: Continuous Raycasts to body or walls (Straight, Right, Left)
+     * 6..8: Food Relative Direction (Forward, Right, Left)
+     * 9..11: Tail Relative Direction (Forward, Right, Left)
+     * 12: Food Distance Normalized
+     * 13: Tail Distance Normalized
+     * 14: Snake Length Ratio
+     * 15: Open Neighbor Ratio Ahead
      */
-    private extractRelativeState(): number[] {
+    private extractBodyAwareState(): number[] {
         if (!this.game) {
-            return new Array(12).fill(0);
+            return new Array(16).fill(0);
         }
 
         const head = this.game.getHeadSnakePosition();
         const apple = this.game.getApplePosition();
         const dimensions = this.game.getDimensions();
         const snake = this.game.getSnake();
+        const snakeLen = this.game.getSnakeLength();
 
         const idx = DQNPlayer.CLOCKWISE.indexOf(this.currentHeading);
         const dirStraight = DQNPlayer.CLOCKWISE[idx !== -1 ? idx : 0];
@@ -152,22 +150,19 @@ class DQNPlayer implements Player {
         const ptRight = GameUtils.applyDirection(head, dirRight);
         const ptLeft = GameUtils.applyDirection(head, dirLeft);
 
-        const ptStraight2 = GameUtils.applyDirection(ptStraight, dirStraight);
-        const ptRight2 = GameUtils.applyDirection(ptRight, dirRight);
-        const ptLeft2 = GameUtils.applyDirection(ptLeft, dirLeft);
-
+        // 1. Immediate Danger (1 step)
         const dangerStraight = !GameUtils.isValidPosition(ptStraight, dimensions, snake) ? 1.0 : 0.0;
         const dangerRight = !GameUtils.isValidPosition(ptRight, dimensions, snake) ? 1.0 : 0.0;
         const dangerLeft = !GameUtils.isValidPosition(ptLeft, dimensions, snake) ? 1.0 : 0.0;
 
-        const dangerStraight2 = dangerStraight === 1.0 || !GameUtils.isValidPosition(ptStraight2, dimensions, snake) ? 1.0 : 0.0;
-        const dangerRight2 = dangerRight === 1.0 || !GameUtils.isValidPosition(ptRight2, dimensions, snake) ? 1.0 : 0.0;
-        const dangerLeft2 = dangerLeft === 1.0 || !GameUtils.isValidPosition(ptLeft2, dimensions, snake) ? 1.0 : 0.0;
+        // 2. Obstacle Raycasts (Distance to wall or body, max 15)
+        const rayStraight = this.castRay(head, dirStraight, dimensions, snake);
+        const rayRight = this.castRay(head, dirRight, dimensions, snake);
+        const rayLeft = this.castRay(head, dirLeft, dimensions, snake);
 
-        // Relative food heading
+        // 3. Relative Food Direction
         const vFoodR = apple.getRow() - head.getRow();
         const vFoodC = apple.getColumn() - head.getColumn();
-
         const [fwdR, fwdC] = DQNPlayer.DIR_VECTORS[dirStraight];
         const [rgtR, rgtC] = DQNPlayer.DIR_VECTORS[dirRight];
 
@@ -177,10 +172,25 @@ class DQNPlayer implements Player {
         const foodFwd = fwdDot > 0 ? 1.0 : 0.0;
         const foodRgt = rgtDot > 0 ? 1.0 : 0.0;
         const foodLft = rgtDot < 0 ? 1.0 : 0.0;
-        const foodBck = fwdDot < 0 ? 1.0 : 0.0;
 
-        const manhattanDist = (Math.abs(vFoodR) + Math.abs(vFoodC)) / (dimensions[0] + dimensions[1]);
+        // 4. Relative Tail Direction
+        // Tail position fallback
+        const tail = head; // Or approximate
+        const vTailR = tail.getRow() - head.getRow();
+        const vTailC = tail.getColumn() - head.getColumn();
+        const tailFwdDot = vTailR * fwdR + vTailC * fwdC;
+        const tailRgtDot = vTailR * rgtR + vTailC * rgtC;
 
+        const tailFwd = tailFwdDot > 0 ? 1.0 : 0.0;
+        const tailRgt = tailRgtDot > 0 ? 1.0 : 0.0;
+        const tailLft = tailRgtDot < 0 ? 1.0 : 0.0;
+
+        // 5. Distances & Proportions
+        const distFood = (Math.abs(vFoodR) + Math.abs(vFoodC)) / (dimensions[0] + dimensions[1]);
+        const distTail = (Math.abs(vTailR) + Math.abs(vTailC)) / (dimensions[0] + dimensions[1]);
+        const lenRatio = snakeLen / (dimensions[0] * dimensions[1]);
+
+        // 6. Free Neighbors Ahead
         let freeNeighbors = 0;
         if (dangerStraight === 0.0) {
             for (const d of DQNPlayer.CLOCKWISE) {
@@ -194,11 +204,23 @@ class DQNPlayer implements Player {
 
         return [
             dangerStraight, dangerRight, dangerLeft,
-            dangerStraight2, dangerRight2, dangerLeft2,
-            foodFwd, foodRgt, foodLft, foodBck,
-            manhattanDist,
+            rayStraight, rayRight, rayLeft,
+            foodFwd, foodRgt, foodLft,
+            tailFwd, tailRgt, tailLft,
+            distFood, distTail, lenRatio,
             freeRatio
         ];
+    }
+
+    private castRay(start: Position, dir: Direction, dimensions: [number, number], snake: any, maxDist: number = 15): number {
+        let curr = start;
+        for (let dist = 1; dist <= maxDist; dist++) {
+            curr = GameUtils.applyDirection(curr, dir);
+            if (!GameUtils.isValidPosition(curr, dimensions, snake)) {
+                return dist / maxDist;
+            }
+        }
+        return 1.0;
     }
 
     private convertActionToDirection(currentDirection: Direction, action: number): Direction {

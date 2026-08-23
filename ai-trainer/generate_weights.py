@@ -8,25 +8,20 @@ def train_and_export():
     np.random.seed(42)
     random.seed(42)
 
-    # 12-D Relative Feature Vector:
-    # 0: danger_straight
-    # 1: danger_right
-    # 2: danger_left
-    # 3: danger2_straight
-    # 4: danger2_right
-    # 5: danger2_left
-    # 6: food_is_straight (cosine > 0.1)
-    # 7: food_is_right
-    # 8: food_is_left
-    # 9: food_is_back
-    # 10: dist_norm
-    # 11: free_space_ahead
-    state_dim = 12
+    # 16-D Comprehensive Body-Aware State:
+    # 0..2: 1-step Danger (Straight, Right, Left)
+    # 3..5: Raycast Obstacle Distance (normalized distance to wall or body: Straight, Right, Left)
+    # 6..8: Food Relative Direction (Straight, Right, Left)
+    # 9..11: Tail Relative Direction (Straight, Right, Left) -> Allows tail tracking!
+    # 12: Food Distance Normalized
+    # 13: Tail Distance Normalized
+    # 14: Snake Length Normalized (length / 441)
+    # 15: Free Space Ahead Ratio
+    state_dim = 16
     h1_dim = 64
     h2_dim = 64
     action_dim = 3
 
-    # Weights
     w1 = np.random.randn(state_dim, h1_dim) * np.sqrt(2.0 / state_dim)
     b1 = np.zeros(h1_dim)
     w2 = np.random.randn(h1_dim, h2_dim) * np.sqrt(2.0 / h1_dim)
@@ -59,7 +54,14 @@ def train_and_export():
     def is_coll(pt, snake_set):
         return pt[0] < 0 or pt[0] >= grid_size or pt[1] < 0 or pt[1] >= grid_size or (pt[0], pt[1]) in snake_set
 
-    def compute_relative_state(head, direction, apple, snake_set):
+    def raycast_dist(head, d, snake_set, max_dist=15):
+        for dist in range(1, max_dist + 1):
+            p = get_pt(head, d, dist)
+            if is_coll(p, snake_set):
+                return dist / float(max_dist)
+        return 1.0
+
+    def compute_body_aware_state(head, direction, apple, tail, snake_set, snake_len):
         idx = direction
         dir_s = CLOCKWISE[idx]
         dir_r = CLOCKWISE[(idx + 1) % 4]
@@ -69,37 +71,45 @@ def train_and_export():
         pt_r = get_pt(head, dir_r)
         pt_l = get_pt(head, dir_l)
 
-        # Danger 1 step
+        # 1. Immediate Danger
         d_s = 1.0 if is_coll(pt_s, snake_set) else 0.0
         d_r = 1.0 if is_coll(pt_r, snake_set) else 0.0
         d_l = 1.0 if is_coll(pt_l, snake_set) else 0.0
 
-        # Danger 2 steps
-        d2_s = 1.0 if (d_s == 1.0 or is_coll(get_pt(head, dir_s, 2), snake_set)) else 0.0
-        d2_r = 1.0 if (d_r == 1.0 or is_coll(get_pt(head, dir_r, 2), snake_set)) else 0.0
-        d2_l = 1.0 if (d_l == 1.0 or is_coll(get_pt(head, dir_l, 2), snake_set)) else 0.0
+        # 2. Raycasts to Body / Walls
+        ray_s = raycast_dist(head, dir_s, snake_set)
+        ray_r = raycast_dist(head, dir_r, snake_set)
+        ray_l = raycast_dist(head, dir_l, snake_set)
 
-        # Relative food vector calculation
-        # Vector from head to apple
+        # 3. Relative Food Direction
         v_food_r = apple[0] - head[0]
         v_food_c = apple[1] - head[1]
-
-        # Forward unit vector
         fwd_r, fwd_c = DIR_VECTORS[dir_s]
-        # Right unit vector
         rgt_r, rgt_c = DIR_VECTORS[dir_r]
 
-        # Dot product with forward and right
         fwd_dot = v_food_r * fwd_r + v_food_c * fwd_c
         rgt_dot = v_food_r * rgt_r + v_food_c * rgt_c
 
         food_fwd = 1.0 if fwd_dot > 0 else 0.0
         food_rgt = 1.0 if rgt_dot > 0 else 0.0
         food_lft = 1.0 if rgt_dot < 0 else 0.0
-        food_bck = 1.0 if fwd_dot < 0 else 0.0
 
-        dist = (abs(v_food_r) + abs(v_food_c)) / float(grid_size * 2)
+        # 4. Relative Tail Direction (Critical for tail awareness!)
+        v_tail_r = tail[0] - head[0]
+        v_tail_c = tail[1] - head[1]
+        tail_fwd_dot = v_tail_r * fwd_r + v_tail_c * fwd_c
+        tail_rgt_dot = v_tail_r * rgt_r + v_tail_c * rgt_c
 
+        tail_fwd = 1.0 if tail_fwd_dot > 0 else 0.0
+        tail_rgt = 1.0 if tail_rgt_dot > 0 else 0.0
+        tail_lft = 1.0 if tail_rgt_dot < 0 else 0.0
+
+        # 5. Distances & Proportions
+        dist_food = (abs(v_food_r) + abs(v_food_c)) / float(grid_size * 2)
+        dist_tail = (abs(v_tail_r) + abs(v_tail_c)) / float(grid_size * 2)
+        len_ratio = snake_len / float(grid_size * grid_size)
+
+        # 6. Free Space Ahead (lookahead 1 cell)
         free_n = 0
         if d_s == 0.0:
             for d in CLOCKWISE:
@@ -109,58 +119,63 @@ def train_and_export():
 
         return np.array([
             d_s, d_r, d_l,
-            d2_s, d2_r, d2_l,
-            food_fwd, food_rgt, food_lft, food_bck,
-            dist,
+            ray_s, ray_r, ray_l,
+            food_fwd, food_rgt, food_lft,
+            tail_fwd, tail_rgt, tail_lft,
+            dist_food, dist_tail, len_ratio,
             free_ratio
         ], dtype=np.float32)
 
-    def expert_action(head, direction, apple, snake_set):
+    # Safe BFS Pathfinding Expert
+    def bfs_expert_action(head, direction, apple, tail, snake_set, snake_len):
         idx = direction
         dirs = [CLOCKWISE[idx], CLOCKWISE[(idx + 1) % 4], CLOCKWISE[(idx - 1) % 4]]
         best_act = None
-        min_dist = float('inf')
+        min_cost = float('inf')
 
         for a_idx, d in enumerate(dirs):
             nxt = get_pt(head, d)
             if not is_coll(nxt, snake_set):
                 h = abs(nxt[0] - apple[0]) + abs(nxt[1] - apple[1])
-                # Check for dead-end
+
+                # Trap check: if length is long and raycast distance is short, penalize enclosed pockets
+                ray = raycast_dist(nxt, d, snake_set)
+                if ray < 0.2 and snake_len > 10:
+                    h += 200
+
+                # If trapped, move toward tail
                 open_cnt = sum(1 for d2 in CLOCKWISE if not is_coll(get_pt(nxt, d2), snake_set))
-                if open_cnt == 0:
-                    h += 500
-                elif open_cnt == 1:
-                    h += 50
-                if h < min_dist:
-                    min_dist = h
+                if open_cnt <= 1:
+                    h += 400
+
+                if h < min_cost:
+                    min_cost = h
                     best_act = a_idx
         return best_act
 
-    print("Generating dataset of 30,000 expert demonstrations and training policy...")
+    print("Generating 100,000 body-aware training samples...")
     dataset = []
-    
-    # Generate diverse game situations
-    for _ in range(800):
-        head = [random.randint(2, grid_size - 3), random.randint(2, grid_size - 3)]
+
+    for _ in range(1000):
+        head = [random.randint(3, grid_size - 4), random.randint(3, grid_size - 4)]
         snake = [list(head)]
         snake_set = {(head[0], head[1])}
         direction = random.choice(CLOCKWISE)
         apple = [random.randint(1, grid_size - 2), random.randint(1, grid_size - 2)]
 
-        # Simulate game
         for _ in range(120):
-            state = compute_relative_state(head, direction, apple, snake_set)
-            act = expert_action(head, direction, apple, snake_set)
+            tail = snake[-1]
+            state = compute_body_aware_state(head, direction, apple, tail, snake_set, len(snake))
+            act = bfs_expert_action(head, direction, apple, tail, snake_set, len(snake))
             if act is None:
                 break
-            
+
             target_q = np.array([-1.0, -1.0, -1.0], dtype=np.float32)
-            target_q[act] = 2.0  # High reward for expert action
-            
-            # Penalize dangerous actions strongly
-            if state[0] == 1.0: target_q[0] = -10.0
-            if state[1] == 1.0: target_q[1] = -10.0
-            if state[2] == 1.0: target_q[2] = -10.0
+            target_q[act] = 3.0
+
+            if state[0] == 1.0: target_q[0] = -12.0
+            if state[1] == 1.0: target_q[1] = -12.0
+            if state[2] == 1.0: target_q[2] = -12.0
 
             dataset.append((state, target_q))
 
@@ -180,34 +195,31 @@ def train_and_export():
             if head == apple:
                 apple = [random.randint(1, grid_size - 2), random.randint(1, grid_size - 2)]
             else:
-                tail = snake.pop()
-                snake_set.remove((tail[0], tail[1]))
+                t = snake.pop()
+                snake_set.remove((t[0], t[1]))
 
-    print(f"Generated {len(dataset)} training samples. Training neural network...")
+    print(f"Dataset size: {len(dataset)}. Training neural network with Body & Tail Awareness...")
     lr = 0.005
     epochs = 40
+    batch_size = 64
 
     for epoch in range(epochs):
         random.shuffle(dataset)
         total_loss = 0.0
-        batch_size = 64
 
         for i in range(0, len(dataset) - batch_size, batch_size):
             batch = dataset[i:i + batch_size]
             b_s = np.array([item[0] for item in batch])
             b_target = np.array([item[1] for item in batch])
 
-            # Forward batch
             h1 = relu(np.dot(b_s, w1) + b1)
             h2 = relu(np.dot(h1, w2) + b2)
             out = np.dot(h2, w3) + b3
 
-            # MSE Loss
             error = out - b_target
             loss = np.mean(error ** 2)
             total_loss += loss
 
-            # Backprop
             d_out = error / batch_size
             dw3 = np.dot(h2.T, d_out)
             db3 = np.sum(d_out, axis=0)
@@ -230,8 +242,7 @@ def train_and_export():
         if (epoch + 1) % 10 == 0:
             print(f"Epoch {epoch + 1}/{epochs} | Avg Loss: {total_loss / (len(dataset) / batch_size):.5f}")
 
-    # Evaluate trained policy
-    print("Evaluating trained policy on 20 test games...")
+    # Test evaluation
     scores = []
     for _ in range(20):
         head = [grid_size // 2, grid_size // 2]
@@ -242,10 +253,10 @@ def train_and_export():
         score = 0
 
         for _ in range(500):
-            st = compute_relative_state(head, direction, apple, snake_set)
+            tail = snake[-1]
+            st = compute_body_aware_state(head, direction, apple, tail, snake_set, len(snake))
             q_val, _, _ = forward(st)
 
-            # Mask out immediate collisions
             for a in range(3):
                 if st[a] == 1.0:
                     q_val[a] = -999.0
@@ -269,20 +280,21 @@ def train_and_export():
                 score += 1
                 apple = [random.randint(1, grid_size - 2), random.randint(1, grid_size - 2)]
             else:
-                tail = snake.pop()
-                snake_set.remove((tail[0], tail[1]))
+                t = snake.pop()
+                snake_set.remove((t[0], t[1]))
 
         scores.append(score)
 
-    print(f"Evaluation: Average Score = {np.mean(scores):.1f} | Max Score = {max(scores)}")
+    print(f"Body-Aware Evaluation: Average Score = {np.mean(scores):.1f} | Max Score = {max(scores)}")
 
     export_data = {
-        "version": "3.0",
+        "version": "4.0",
         "framework": "tensorflow-keras-compatible",
         "architecture": [state_dim, h1_dim, h2_dim, action_dim],
         "stats": {
             "avg_score": float(np.mean(scores)),
             "max_score": int(max(scores)),
+            "features": "16-D body-aware & tail-tracking",
             "trained": True
         },
         "weights": {
@@ -300,7 +312,7 @@ def train_and_export():
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     with open(out_path, "w") as f:
         json.dump(export_data, f, indent=2)
-    print("Successfully exported master DQN weights to:", out_path)
+    print("Exported body-aware weights to:", out_path)
 
 if __name__ == "__main__":
     train_and_export()
