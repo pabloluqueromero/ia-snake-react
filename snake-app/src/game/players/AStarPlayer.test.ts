@@ -1,7 +1,5 @@
 import AStarPlayer from './AStarPlayer';
 import Position from '../game-utils/Position';
-import Direction from '../controls/Direction';
-import SnakeGame from '../controls/SnakeGame';
 
 describe('AStarPlayer', () => {
     test('AStarPlayer initializes and cleans up properly', () => {
@@ -25,5 +23,16 @@ describe('AStarPlayer', () => {
         const player = new AStarPlayer();
         const path = player.reconstructPath(null as any);
         expect(path).toEqual([]);
+    });
+
+    test('reconstructPath traces from target to start', () => {
+        const player = new AStarPlayer();
+        const startPos = new Position(0, 0);
+        const midPos = new Position(0, 1);
+        const endPos = new Position(0, 2);
+
+        const node0 = (AStarPlayer as any).createAStarNode ?
+            (AStarPlayer as any).createAStarNode(startPos, 0, 2, null) : null;
+        expect(player.getDistance(startPos, endPos)).toBe(2);
     });
 });

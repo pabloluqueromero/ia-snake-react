@@ -1,11 +1,9 @@
-
 import Direction from "../controls/Direction";
 import SnakeGame from "../controls/SnakeGame";
 import Player from "./Player";
 import { HeapQueue } from "../game-utils/HeapQueue";
 import Position from "../game-utils/Position";
 import { GameUtils } from "../game-utils/GameUtils";
-
 
 class AStarPlayer implements Player {
     private moves: Direction[] = [];
@@ -23,7 +21,7 @@ class AStarPlayer implements Player {
 
     changeVisualize(): void {
         this.visualize = !this.visualize;
-        if (!this.visualize) {
+        if (!this.visualize && this.game && this.game.getBoard() && this.game.getBoard().current) {
             this.game.getBoard().current.clearVisualization();
         }
     }
@@ -36,6 +34,7 @@ class AStarPlayer implements Player {
     }
 
     async getNextMove(): Promise<Direction> {
+        // If cached path is empty, compute a new path
         if (this.moves.length === 0) {
             if (this.visualize && this.game.getBoard() && this.game.getBoard().current) {
                 this.game.getBoard().current.clearVisualization();
@@ -45,28 +44,92 @@ class AStarPlayer implements Player {
             if (this.moves.length === 0) {
                 return this.getMoveToSurvive();
             }
+        }
+
+        // Validate the next planned move against current snake position
+        const nextMove = this.moves.pop();
+        if (nextMove !== undefined) {
+            const nextPos = GameUtils.applyDirection(this.game.getHeadSnakePosition(), nextMove);
+            if (GameUtils.isValidPosition(nextPos, this.game.getDimensions(), this.game.getSnake())) {
+                return nextMove;
+            }
+        }
+
+        // Path was obstructed by body movement: recompute or survive
+        this.moves = [];
+        const freshMoves = await this.computeNextPath();
+        this.moves = freshMoves;
+        if (this.moves.length > 0) {
             return this.moves.pop();
         }
-        return this.moves.pop();
+        return this.getMoveToSurvive();
     }
 
+    /**
+     * When no direct path to apple exists, choose the move with the largest reachable open space (flood fill).
+     */
     getMoveToSurvive(): Direction {
+        const head = this.game.getHeadSnakePosition();
         const validDirections = GameUtils.allDirections
             .filter(direction => {
-                const nextPosition = GameUtils.applyDirection(this.game.getHeadSnakePosition(), direction);
+                const nextPosition = GameUtils.applyDirection(head, direction);
                 return GameUtils.isValidPosition(nextPosition, this.game.getDimensions(), this.game.getSnake());
             });
-        if (validDirections.length > 0) {
-            return validDirections[0];
-        } else {
+
+        if (validDirections.length === 0) {
             return Direction.DOWN;
         }
+
+        // Pick direction with largest reachable space using BFS flood fill
+        let bestDir = validDirections[0];
+        let maxSpace = -1;
+
+        for (const dir of validDirections) {
+            const nextPos = GameUtils.applyDirection(head, dir);
+            const space = this.countReachableSpace(nextPos);
+            if (space > maxSpace) {
+                maxSpace = space;
+                bestDir = dir;
+            }
+        }
+
+        return bestDir;
+    }
+
+    private countReachableSpace(startPos: Position): number {
+        const dimensions = this.game.getDimensions();
+        const snake = this.game.getSnake();
+        const visited = new Set<number>();
+        const queue: Position[] = [startPos];
+        visited.add(this.getPositionID(startPos));
+
+        let count = 0;
+        const maxLimit = 100; // Cap search to keep it fast
+
+        while (queue.length > 0 && count < maxLimit) {
+            const current = queue.shift();
+            count++;
+
+            for (const dir of GameUtils.allDirections) {
+                const neighbour = GameUtils.applyDirection(current, dir);
+                const id = this.getPositionID(neighbour);
+                if (!visited.has(id) && GameUtils.isValidPosition(neighbour, dimensions, snake)) {
+                    visited.add(id);
+                    queue.push(neighbour);
+                }
+            }
+        }
+
+        return count;
     }
 
     async computeNextPath(): Promise<Direction[]> {
         let moves: Direction[] = [];
-        let currentNode = AStarNode.createAStarNode(this.game.getHeadSnakePosition(), 0, 0, null);
+        const head = this.game.getHeadSnakePosition();
         const targetNode = this.game.getApplePosition();
+
+        const initialH = this.getDistance(head, targetNode);
+        const currentNode = AStarNode.createAStarNode(head, 0, initialH, null);
 
         const exploredNodes = new Set<number>();
         const priorityQueue = new HeapQueue<AStarNode>();
@@ -74,9 +137,10 @@ class AStarPlayer implements Player {
         priorityQueue.insert(currentNode, currentNode.getPriority());
 
         while (!priorityQueue.isEmpty()) {
-            currentNode = priorityQueue.pop();
-            if (currentNode.getPosition().equals(targetNode)) {
-                const result = this.reconstructPath(currentNode);
+            const current = priorityQueue.pop();
+
+            if (current.getPosition().equals(targetNode)) {
+                const result = this.reconstructPath(current);
                 moves = result.map(e => e.direction);
                 if (this.visualize) {
                     for (const e of result) {
@@ -91,27 +155,27 @@ class AStarPlayer implements Player {
                                 this.game.setSinglePosition(e.nextPosition, ["path"]);
                             }
                             resolve();
-                        }, this.visualizationSpeed * 10));
+                        }, this.visualizationSpeed * 5));
                     }
-                    await new Promise<void>((resolve) => setTimeout(resolve, this.visualizationSpeed * 20));
+                    await new Promise<void>((resolve) => setTimeout(resolve, this.visualizationSpeed * 10));
                 }
                 break;
             }
 
-            const currentNodeID = this.getPositionID(currentNode.getPosition());
+            const currentNodeID = this.getPositionID(current.getPosition());
             if (exploredNodes.has(currentNodeID)) {
                 continue;
             }
             exploredNodes.add(currentNodeID);
 
-            const neighbours = this.getNeighbours(currentNode.getPosition())
+            const neighbours = this.getNeighbours(current.getPosition())
                 .filter(neighbour => !exploredNodes.has(this.getPositionID(neighbour)));
 
             for (let i = 0; i < neighbours.length; i++) {
                 const neighbour = neighbours[i];
-                const gCost = currentNode.getCost() + 1;
+                const gCost = current.getCost() + 1;
                 const hCost = this.getDistance(neighbour, targetNode);
-                const tempNode = AStarNode.createAStarNode(neighbour, gCost, hCost, currentNode);
+                const tempNode = AStarNode.createAStarNode(neighbour, gCost, hCost, current);
                 priorityQueue.insert(tempNode, tempNode.getPriority());
 
                 if (this.visualize) {
@@ -146,31 +210,32 @@ class AStarPlayer implements Player {
         if (currentNode === null) {
             return [];
         }
-        let directions: { direction: Direction, nextPosition: Position }[] = [];
-        while (currentNode.getParentNode() !== null) {
+        const directions: { direction: Direction, nextPosition: Position }[] = [];
+        let curr: AStarNode | null = currentNode;
+        while (curr !== null && curr.getParentNode() !== null) {
             directions.push({
-                direction: GameUtils.getDirection(currentNode.getParentNode().getPosition(),
-                    currentNode.getPosition()),
-                nextPosition: currentNode.getParentNode().getPosition()
+                direction: GameUtils.getDirection(curr.getParentNode().getPosition(), curr.getPosition()),
+                nextPosition: curr.getParentNode().getPosition()
             });
-            currentNode = currentNode.getParentNode();
+            curr = curr.getParentNode();
         }
         return directions;
     }
 }
+
 export default AStarPlayer;
 
 class AStarNode {
-    static createAStarNode(position: Position, cost: number, heuristic: number, parentNode: AStarNode) {
+    static createAStarNode(position: Position, cost: number, heuristic: number, parentNode: AStarNode | null) {
         return new AStarNode(position, cost, heuristic, parentNode);
     }
 
     private position: Position;
     private heuristicValue: number;
     private cost: number;
-    private parentNode: AStarNode;
+    private parentNode: AStarNode | null;
 
-    private constructor(position: Position, cost: number, heuristicValue: number, parentNode: AStarNode) {
+    private constructor(position: Position, cost: number, heuristicValue: number, parentNode: AStarNode | null) {
         this.position = position;
         this.cost = cost;
         this.heuristicValue = heuristicValue;
@@ -181,8 +246,13 @@ class AStarNode {
         return this.position;
     }
 
-    getPriority() {
-        return this.heuristicValue + this.cost;
+    /**
+     * Targeted priority calculation with tie-breaker:
+     * Primary key: Total estimated path length f(n) = g(n) + h(n)
+     * Secondary tie-breaker: Prefer nodes closer to the target (lower h)
+     */
+    getPriority(): number {
+        return (this.cost + this.heuristicValue) * 1000 + this.heuristicValue;
     }
 
     getHeuristicValue() {
@@ -193,9 +263,7 @@ class AStarNode {
         return this.cost;
     }
 
-    getParentNode() {
+    getParentNode(): AStarNode | null {
         return this.parentNode;
     }
 }
-
-
