@@ -22,103 +22,101 @@ export const DQNHUD: React.FC<DQNHUDProps> = ({ telemetry, onEpsilonChange }) =>
 
     if (!telemetry) {
         return (
-            <div className="dqn-hud-container">
-                <div className="dqn-hud-header">
-                    <span className="dqn-hud-title">🤖 Neural Net (DQN)</span>
-                    <span className="dqn-badge">Standby</span>
+            <div className="dqn-card">
+                <div className="dqn-header">
+                    <span className="control-label">
+                        <i className="fas fa-network-wired"></i> DQN Model Telemetry
+                    </span>
+                    <span className="speed-badge">Ready</span>
                 </div>
-                <p style={{ color: '#94a3b8', fontSize: '11px', textAlign: 'center', margin: '4px 0' }}>
-                    Press ENTER or Start to begin DQN inference
-                </p>
+                <div className="dqn-placeholder">
+                    Start game to visualize live inference
+                </div>
             </div>
         );
     }
 
-    const { qValues, chosenAction, dangers, foodRelative, distanceToFood, isExploring } = telemetry;
+    const { qValues, chosenAction, dangers, distanceToFood } = telemetry;
 
-    // Normalize Q-values for visual progress bars
     const maxQ = Math.max(...qValues, 0.1);
     const minQ = Math.min(...qValues, 0.0);
     const range = Math.max(maxQ - minQ, 0.001);
 
     return (
-        <div className="dqn-hud-container">
-            <div className="dqn-hud-header">
-                <span className="dqn-hud-title">🤖 Neural Net (DQN)</span>
-                <span className={`dqn-badge ${isExploring ? 'exploring' : ''}`}>
-                    {isExploring ? 'Exploration' : 'TensorFlow Inference'}
+        <div className="dqn-card">
+            <div className="dqn-header">
+                <span className="control-label">
+                    <i className="fas fa-network-wired"></i> DQN Model Telemetry
+                </span>
+                <span className="speed-badge">
+                    {telemetry.isExploring ? 'Exploring' : 'Live Inference'}
                 </span>
             </div>
 
-            {/* Q-Values Section */}
-            <div className="dqn-qvalues-section">
-                <div className="dqn-section-title">Action Q-Values (Predicted Return)</div>
-                {qValues.map((q, idx) => {
-                    const isChosen = idx === chosenAction;
-                    const normalizedWidth = Math.max(5, Math.min(100, ((q - minQ) / range) * 100));
+            {/* Q-Values Breakdown */}
+            <div className="control-group">
+                <div className="control-header">
+                    <span className="control-sublabel">Action Q-Values</span>
+                    <span className="control-sublabel">Apple Dist: {distanceToFood}</span>
+                </div>
+                <div className="dqn-qbars-list">
+                    {qValues.map((q, idx) => {
+                        const isChosen = idx === chosenAction;
+                        const normalizedWidth = Math.max(8, Math.min(100, ((q - minQ) / range) * 100));
 
-                    return (
-                        <div key={idx} className="dqn-qbar-row">
-                            <span className="dqn-qbar-label">{ACTION_LABELS[idx]}</span>
-                            <div className="dqn-qbar-track">
-                                <div
-                                    className={`dqn-qbar-fill ${isChosen ? 'active' : ''}`}
-                                    style={{ width: `${normalizedWidth}%` }}
-                                />
+                        return (
+                            <div key={idx} className={`dqn-qbar-row ${isChosen ? 'chosen' : ''}`}>
+                                <span className="dqn-action-name">{ACTION_LABELS[idx]}</span>
+                                <div className="dqn-bar-track">
+                                    <div
+                                        className="dqn-bar-fill"
+                                        style={{ width: `${normalizedWidth}%` }}
+                                    />
+                                </div>
+                                <span className="dqn-q-number">{q.toFixed(2)}</span>
                             </div>
-                            <span className={`dqn-qbar-val ${isChosen ? 'active' : ''}`}>
-                                {q.toFixed(2)}
-                            </span>
-                        </div>
-                    );
-                })}
+                        );
+                    })}
+                </div>
             </div>
 
-            {/* Sensor & Environmental Features */}
-            <div className="dqn-sensors-grid">
-                <div className="dqn-sensor-block">
-                    <div className="dqn-section-title">Danger Radar</div>
-                    <div className="dqn-radar-row">
-                        <span className={`dqn-sensor-pill ${!dangers[2] ? 'clear' : ''}`}>
-                            L: {!dangers[2] ? 'Clear' : 'Danger'}
-                        </span>
-                        <span className={`dqn-sensor-pill ${!dangers[0] ? 'clear' : ''}`}>
-                            S: {!dangers[0] ? 'Clear' : 'Danger'}
-                        </span>
-                        <span className={`dqn-sensor-pill ${!dangers[1] ? 'clear' : ''}`}>
-                            R: {!dangers[1] ? 'Clear' : 'Danger'}
-                        </span>
+            {/* Sensor Radar */}
+            <div className="control-group">
+                <span className="control-sublabel">Obstacle Sensors</span>
+                <div className="dqn-sensor-row">
+                    <div className={`dqn-sensor-chip ${dangers[2] ? 'danger' : 'clear'}`}>
+                        <span>Left</span>
+                        <strong>{dangers[2] ? 'Blocked' : 'Clear'}</strong>
                     </div>
-                </div>
-
-                <div className="dqn-sensor-block">
-                    <div className="dqn-section-title">Apple Sensor (Dist: {distanceToFood})</div>
-                    <div className="dqn-radar-row">
-                        {foodRelative.up && <span className="dqn-sensor-pill clear">↑ North</span>}
-                        {foodRelative.down && <span className="dqn-sensor-pill clear">↓ South</span>}
-                        {foodRelative.left && <span className="dqn-sensor-pill clear">← West</span>}
-                        {foodRelative.right && <span className="dqn-sensor-pill clear">→ East</span>}
+                    <div className={`dqn-sensor-chip ${dangers[0] ? 'danger' : 'clear'}`}>
+                        <span>Ahead</span>
+                        <strong>{dangers[0] ? 'Blocked' : 'Clear'}</strong>
+                    </div>
+                    <div className={`dqn-sensor-chip ${dangers[1] ? 'danger' : 'clear'}`}>
+                        <span>Right</span>
+                        <strong>{dangers[1] ? 'Blocked' : 'Clear'}</strong>
                     </div>
                 </div>
             </div>
 
-            {/* Live Epsilon / Exploration Tuning */}
-            <div>
-                <div className="dqn-section-title" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>Exploration Rate (ε):</span>
-                    <span style={{ color: '#38bdf8' }}>{epsilon.toFixed(2)}</span>
+            {/* Exploration Rate */}
+            <div className="control-group">
+                <div className="control-header">
+                    <span className="control-sublabel">Exploration Rate (ε)</span>
+                    <span className="font-mono" style={{ fontSize: '0.72rem', color: 'var(--text-primary)' }}>
+                        {epsilon.toFixed(2)}
+                    </span>
                 </div>
-                <div className="dqn-epsilon-slider">
-                    <span style={{ fontSize: '10px', color: '#64748b' }}>Greedy (0.0)</span>
+                <div className="slider-wrapper">
                     <input
                         type="range"
                         min="0.0"
                         max="1.0"
                         step="0.05"
                         value={epsilon}
+                        className="custom-range"
                         onChange={handleEpsChange}
                     />
-                    <span style={{ fontSize: '10px', color: '#64748b' }}>Explore (1.0)</span>
                 </div>
             </div>
         </div>

@@ -20,6 +20,7 @@ function SnakeGameUI() {
     const [theme, setTheme] = useState<'light' | 'dark'>('light');
     const [currentAlgorithm, setCurrentAlgorithm] = useState<Algorithm>(Algorithm.HUMAN);
     const [dqnTelemetry, setDqnTelemetry] = useState<DQNTelemetry | null>(null);
+    const [visualize, setVisualize] = useState<boolean>(true);
     const [gameOverStats, setGameOverStats] = useState({
         algorithm: 'Human',
         score: 0,
@@ -81,6 +82,7 @@ function SnakeGameUI() {
     }, []);
 
     const changeVisualize = useCallback(() => {
+        setVisualize(v => !v);
         if (snakeGameRef.current) {
             snakeGameRef.current.getPlayer().changeVisualize();
         }
@@ -256,7 +258,7 @@ function SnakeGameUI() {
                         setSpeed={setSpeed}
                         changeVisualize={changeVisualize}
                     />
-                    {currentAlgorithm === Algorithm.DQN && (
+                    {currentAlgorithm === Algorithm.DQN && visualize && (
                         <DQNHUD telemetry={dqnTelemetry} onEpsilonChange={handleEpsilonChange} />
                     )}
                     <ScoreBoard
