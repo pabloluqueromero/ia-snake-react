@@ -3,10 +3,12 @@ import { Link } from 'react-router-dom';
 import SnakeGame from '../../game/controls/SnakeGame';
 import Algorithm from '../../game/game-utils/Algorithm';
 import HumanPlayer from '../../game/players/HumanPlayer';
+import DQNPlayer, { DQNTelemetry } from '../../game/players/DQNPlayer';
 import GameOver from '../GameOver/GameOver';
 import ScoreBoard from '../ScoreBoard/ScoreBoard';
 import Settings from '../Settings/Settings';
 import SnakeBoard from '../SnakeBoard/SnakeBoard';
+import DQNHUD from '../DQNHUD/DQNHUD';
 import './SnakeGameUI.css';
 
 const BOARD_SIZE = 21;
@@ -17,6 +19,7 @@ function SnakeGameUI() {
     const [isMoving, setIsMoving] = useState(false);
     const [theme, setTheme] = useState<'light' | 'dark'>('light');
     const [currentAlgorithm, setCurrentAlgorithm] = useState<Algorithm>(Algorithm.HUMAN);
+    const [dqnTelemetry, setDqnTelemetry] = useState<DQNTelemetry | null>(null);
     const [gameOverStats, setGameOverStats] = useState({
         algorithm: 'Human',
         score: 0,
@@ -55,6 +58,25 @@ function SnakeGameUI() {
         }
         if (snakeGameRef.current) {
             snakeGameRef.current.setPlayer(algorithm);
+            if (algorithm === Algorithm.DQN) {
+                const player = snakeGameRef.current.getPlayer() as DQNPlayer;
+                if (player && typeof player.setTelemetryListener === 'function') {
+                    player.setTelemetryListener((telemetry) => {
+                        setDqnTelemetry(telemetry);
+                    });
+                }
+            } else {
+                setDqnTelemetry(null);
+            }
+        }
+    }, []);
+
+    const handleEpsilonChange = useCallback((eps: number) => {
+        if (snakeGameRef.current) {
+            const player = snakeGameRef.current.getPlayer() as DQNPlayer;
+            if (player && typeof player.setExplorationRate === 'function') {
+                player.setExplorationRate(eps);
+            }
         }
     }, []);
 
@@ -87,8 +109,16 @@ function SnakeGameUI() {
             snakeGameRef.current.initializeGame();
             snakeGameRef.current.resume();
             setIsMoving(true);
+            if (currentAlgorithm === Algorithm.DQN) {
+                const player = snakeGameRef.current.getPlayer() as DQNPlayer;
+                if (player && typeof player.setTelemetryListener === 'function') {
+                    player.setTelemetryListener((telemetry) => {
+                        setDqnTelemetry(telemetry);
+                    });
+                }
+            }
         }
-    }, []);
+    }, [currentAlgorithm]);
 
     const clearScoreBoard = useCallback(() => {
         if (scoreBoardRef.current) {
@@ -153,7 +183,7 @@ function SnakeGameUI() {
                     </div>
                     <div className="brand-text">
                         <h1>Snake AI</h1>
-                        <span className="brand-subtitle">Search & Pathfinding Visualizer</span>
+                        <span className="brand-subtitle">Search & Deep Q-Learning Visualizer</span>
                     </div>
                 </div>
 
@@ -213,12 +243,12 @@ function SnakeGameUI() {
                             <span>Restart</span>
                         </button>
                         <span className="keyboard-tip">
-                            <i className="fas fa-keyboard"></i> Space / Enter / WASD
+                            <i className="fas fa-keyboard"></i> Space / Enter / Arrows
                         </span>
                     </div>
                 </section>
 
-                {/* Right Panel: Settings Deck & Live Scoreboard */}
+                {/* Right Panel: Settings Deck, DQN Telemetry HUD & Live Scoreboard */}
                 <aside className="control-sidebar">
                     <Settings
                         currentAlgorithm={currentAlgorithm}
@@ -226,6 +256,9 @@ function SnakeGameUI() {
                         setSpeed={setSpeed}
                         changeVisualize={changeVisualize}
                     />
+                    {currentAlgorithm === Algorithm.DQN && (
+                        <DQNHUD telemetry={dqnTelemetry} onEpsilonChange={handleEpsilonChange} />
+                    )}
                     <ScoreBoard
                         ref={scoreBoardRef}
                         algorithm={currentAlgorithm}
