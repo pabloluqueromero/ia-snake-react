@@ -85,7 +85,8 @@ class DQNPlayer implements Player {
         }
 
         const state = this.extractBodyAwareState();
-        const { action, qValues, isExploring } = this.inference.selectAction(state, this.epsilon);
+        const qValues = this.inference.predict(state);
+        const action = this.selectTrapProofAction(state, qValues);
         const nextDirection = this.convertActionToDirection(this.currentHeading, action);
 
         if (this.telemetryListener) {
@@ -101,7 +102,7 @@ class DQNPlayer implements Player {
                     left: state[8] > 0.5
                 },
                 distanceToFood: Math.round(state[12] * (this.game.getDimensions()[0] + this.game.getDimensions()[1])),
-                isExploring
+                isExploring: false
             };
             this.telemetryListener(telemetry);
         }
@@ -120,16 +121,85 @@ class DQNPlayer implements Player {
     }
 
     /**
-     * Extracts 16 body-aware and tail-tracking spatial features:
-     * 0..2: 1-step Danger (Straight, Right, Left)
-     * 3..5: Continuous Raycasts to body or walls (Straight, Right, Left)
-     * 6..8: Food Relative Direction (Forward, Right, Left)
-     * 9..11: Tail Relative Direction (Forward, Right, Left)
-     * 12: Food Distance Normalized
-     * 13: Tail Distance Normalized
-     * 14: Snake Length Ratio
-     * 15: Open Neighbor Ratio Ahead
+     * Trap-Proof action selector combining Deep Q-Values with topological safety
      */
+    private selectTrapProofAction(state: number[], qValues: number[]): number {
+        if (!this.game) return 0;
+
+        const head = this.game.getHeadSnakePosition();
+        const dimensions = this.game.getDimensions();
+        const snake = this.game.getSnake();
+        const snakeLen = this.game.getSnakeLength();
+
+        const idx = DQNPlayer.CLOCKWISE.indexOf(this.currentHeading);
+        const dirs = [
+            DQNPlayer.CLOCKWISE[idx !== -1 ? idx : 0],
+            DQNPlayer.CLOCKWISE[(idx + 1) % 4],
+            DQNPlayer.CLOCKWISE[(idx - 1 + 4) % 4]
+        ];
+
+        // Evaluate reachability and chamber sizes for each action
+        const actionSafety = [0, 1, 2].map(a => {
+            const danger = state[a] > 0.5;
+            if (danger) return { action: a, safe: false, space: 0, q: qValues[a] };
+
+            const nextPos = GameUtils.applyDirection(head, dirs[a]);
+            const space = this.countReachableCells(nextPos, dimensions, snake, 60);
+            const isTrapped = space < Math.min(snakeLen + 2, 45);
+
+            return {
+                action: a,
+                safe: !isTrapped,
+                space,
+                q: qValues[a]
+            };
+        });
+
+        // Pick highest Q action among topologically non-trapped moves
+        const nonTrappedMoves = actionSafety.filter(m => m.safe);
+        if (nonTrappedMoves.length > 0) {
+            nonTrappedMoves.sort((a, b) => b.q - a.q);
+            return nonTrappedMoves[0].action;
+        }
+
+        // If all moves are somewhat confined, pick the move with the largest surviving open space
+        const validMoves = actionSafety.filter(m => m.space > 0);
+        if (validMoves.length > 0) {
+            validMoves.sort((a, b) => b.space - a.space || b.q - a.q);
+            return validMoves[0].action;
+        }
+
+        return 0;
+    }
+
+    /**
+     * BFS Flood-fill to count available chamber cells
+     */
+    private countReachableCells(start: Position, dimensions: [number, number], snake: any, maxCount: number = 60): number {
+        if (!GameUtils.isValidPosition(start, dimensions, snake)) return 0;
+
+        const visited = new Set<string>();
+        visited.add(`${start.getRow()},${start.getColumn()}`);
+        const queue: Position[] = [start];
+        let count = 0;
+
+        while (queue.length > 0 && count < maxCount) {
+            const curr = queue.shift()!;
+            count++;
+
+            for (const d of DQNPlayer.CLOCKWISE) {
+                const nxt = GameUtils.applyDirection(curr, d);
+                const key = `${nxt.getRow()},${nxt.getColumn()}`;
+                if (!visited.has(key) && GameUtils.isValidPosition(nxt, dimensions, snake)) {
+                    visited.add(key);
+                    queue.push(nxt);
+                }
+            }
+        }
+
+        return count;
+    }
+
     private extractBodyAwareState(): number[] {
         if (!this.game) {
             return new Array(16).fill(0);
@@ -150,17 +220,14 @@ class DQNPlayer implements Player {
         const ptRight = GameUtils.applyDirection(head, dirRight);
         const ptLeft = GameUtils.applyDirection(head, dirLeft);
 
-        // 1. Immediate Danger (1 step)
         const dangerStraight = !GameUtils.isValidPosition(ptStraight, dimensions, snake) ? 1.0 : 0.0;
         const dangerRight = !GameUtils.isValidPosition(ptRight, dimensions, snake) ? 1.0 : 0.0;
         const dangerLeft = !GameUtils.isValidPosition(ptLeft, dimensions, snake) ? 1.0 : 0.0;
 
-        // 2. Obstacle Raycasts (Distance to wall or body, max 15)
         const rayStraight = this.castRay(head, dirStraight, dimensions, snake);
         const rayRight = this.castRay(head, dirRight, dimensions, snake);
         const rayLeft = this.castRay(head, dirLeft, dimensions, snake);
 
-        // 3. Relative Food Direction
         const vFoodR = apple.getRow() - head.getRow();
         const vFoodC = apple.getColumn() - head.getColumn();
         const [fwdR, fwdC] = DQNPlayer.DIR_VECTORS[dirStraight];
@@ -173,9 +240,7 @@ class DQNPlayer implements Player {
         const foodRgt = rgtDot > 0 ? 1.0 : 0.0;
         const foodLft = rgtDot < 0 ? 1.0 : 0.0;
 
-        // 4. Relative Tail Direction
-        // Tail position fallback
-        const tail = head; // Or approximate
+        const tail = head;
         const vTailR = tail.getRow() - head.getRow();
         const vTailC = tail.getColumn() - head.getColumn();
         const tailFwdDot = vTailR * fwdR + vTailC * fwdC;
@@ -185,22 +250,11 @@ class DQNPlayer implements Player {
         const tailRgt = tailRgtDot > 0 ? 1.0 : 0.0;
         const tailLft = tailRgtDot < 0 ? 1.0 : 0.0;
 
-        // 5. Distances & Proportions
         const distFood = (Math.abs(vFoodR) + Math.abs(vFoodC)) / (dimensions[0] + dimensions[1]);
         const distTail = (Math.abs(vTailR) + Math.abs(vTailC)) / (dimensions[0] + dimensions[1]);
         const lenRatio = snakeLen / (dimensions[0] * dimensions[1]);
 
-        // 6. Free Neighbors Ahead
-        let freeNeighbors = 0;
-        if (dangerStraight === 0.0) {
-            for (const d of DQNPlayer.CLOCKWISE) {
-                const p = GameUtils.applyDirection(ptStraight, d);
-                if (GameUtils.isValidPosition(p, dimensions, snake)) {
-                    freeNeighbors += 1;
-                }
-            }
-        }
-        const freeRatio = freeNeighbors / 4.0;
+        const spaceAhead = this.countReachableCells(ptStraight, dimensions, snake, 50) / 50.0;
 
         return [
             dangerStraight, dangerRight, dangerLeft,
@@ -208,7 +262,7 @@ class DQNPlayer implements Player {
             foodFwd, foodRgt, foodLft,
             tailFwd, tailRgt, tailLft,
             distFood, distTail, lenRatio,
-            freeRatio
+            spaceAhead
         ];
     }
 
