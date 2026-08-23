@@ -57,6 +57,7 @@ class ScoreBoard extends React.Component<ScoreBoardProps, ScoreBoardState> {
     getAlgorithmName(algorithm?: Algorithm): string {
         if (algorithm === Algorithm.ASTAR) return "A*";
         if (algorithm === Algorithm.HAMILTONIANCYCLE) return "Hamiltonian";
+        if (algorithm === Algorithm.DQN) return "DQN AI";
         return "Human";
     }
 
@@ -172,6 +173,7 @@ class ScoreBoard extends React.Component<ScoreBoardProps, ScoreBoardState> {
 
     getBadgeClass(alg: string) {
         if (alg === 'A*' || alg.includes('A*')) return 'badge-astar';
+        if (alg.includes('DQN')) return 'badge-dqn';
         if (alg.includes('Hamiltonian')) return 'badge-hamiltonian';
         return 'badge-human';
     }

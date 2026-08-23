@@ -58,6 +58,14 @@ function Settings(props: SettingsProps) {
             <i className="fas fa-brain"></i>
             <span>A* AI</span>
           </button>
+          <button
+            type="button"
+            className={`segment-btn ${activeAlg === Algorithm.DQN ? 'active' : ''}`}
+            onClick={() => handleAlgChange(Algorithm.DQN)}
+          >
+            <i className="fas fa-network-wired"></i>
+            <span>DQN AI</span>
+          </button>
         </div>
       </div>
 
@@ -83,7 +91,7 @@ function Settings(props: SettingsProps) {
       <div className="control-group toggle-group">
         <div className="toggle-info">
           <span className="control-label">Search Visualization</span>
-          <span className="control-sublabel">Render explored & expanded nodes</span>
+          <span className="control-sublabel">Render path and search heuristics</span>
         </div>
         <label className="toggle-switch">
           <input

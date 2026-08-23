@@ -6,6 +6,8 @@ import Position from '../game-utils/Position';
 import AStarPlayer from '../players/AStarPlayer';
 import HamiltonianPlayer from '../players/HamiltonianPlayer';
 import HumanPlayer from '../players/HumanPlayer';
+import DQNPlayer from '../players/DQNPlayer';
+import { generateDefaultWeights } from '../ai/defaultWeights';
 import Player from '../players/Player';
 import Direction from './Direction';
 import Snake from './Snake';
@@ -126,6 +128,9 @@ class SnakeGame {
                 break;
             case Algorithm.HAMILTONIANCYCLE:
                 this.player = new HamiltonianPlayer();
+                break;
+            case Algorithm.DQN:
+                this.player = new DQNPlayer(generateDefaultWeights());
                 break;
             default:
                 this.player = new AStarPlayer();
